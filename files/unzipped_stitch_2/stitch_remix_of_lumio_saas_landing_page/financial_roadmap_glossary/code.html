@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FinanceIQ - Peta Jalan</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Sora:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#0a0e14",
+                        "secondary-fixed-dim": "#ffb952",
+                        "on-secondary-fixed-variant": "#633f00",
+                        "surface-container-low": "#181c22",
+                        "primary-container": "#3ecf8e",
+                        "primary": "#60eca8",
+                        "on-error": "#690005",
+                        "surface-bright": "#353940",
+                        "outline-variant": "#3d4a41",
+                        "error-container": "#93000a",
+                        "outline": "#869489",
+                        "tertiary-fixed": "#ffdad2",
+                        "surface-container-highest": "#31353c",
+                        "surface": "#10141a",
+                        "secondary-fixed": "#ffddb3",
+                        "on-primary-fixed-variant": "#005233",
+                        "surface-tint": "#51df9c",
+                        "on-tertiary-fixed": "#3c0700",
+                        "error": "#ffb4ab",
+                        "tertiary": "#ffc6b8",
+                        "on-secondary-fixed": "#291800",
+                        "background": "#10141a",
+                        "on-surface": "#dfe2eb",
+                        "secondary": "#ffb952",
+                        "surface-container": "#1c2026",
+                        "tertiary-container": "#ff9e86",
+                        "on-primary": "#003822",
+                        "inverse-on-surface": "#2d3137",
+                        "on-secondary-container": "#3c2500",
+                        "surface-variant": "#31353c",
+                        "inverse-surface": "#dfe2eb",
+                        "tertiary-fixed-dim": "#ffb4a2",
+                        "secondary-container": "#c48410",
+                        "on-primary-container": "#005434",
+                        "on-error-container": "#ffdad6",
+                        "inverse-primary": "#006c45",
+                        "on-surface-variant": "#bbcabe",
+                        "primary-fixed": "#71fcb6",
+                        "surface-dim": "#10141a",
+                        "on-tertiary": "#5f1503",
+                        "on-tertiary-fixed-variant": "#7e2c17",
+                        "primary-fixed-dim": "#51df9c",
+                        "on-tertiary-container": "#802d18",
+                        "on-background": "#dfe2eb",
+                        "on-primary-fixed": "#002112",
+                        "on-secondary": "#452b00",
+                        "surface-container-high": "#262a31"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-gap-sm": "8px",
+                        "glass-padding": "16px",
+                        "stack-gap-lg": "24px",
+                        "stack-gap-md": "16px",
+                        "container-padding": "20px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Sora"],
+                        "display": ["Sora"],
+                        "headline-lg": ["Sora"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "display": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-container-lowest text-on-surface min-h-screen selection:bg-primary/30 selection:text-primary pb-24">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-white/10 flex justify-between items-center px-container-padding h-16 w-full">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[24px]">lightbulb</span>
+<span class="font-display text-display text-primary tracking-tighter text-[20px] md:text-[32px]">FinanceIQ</span>
+</div>
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-full border border-white/5">Mode: Pemula</span>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="pt-24 px-container-padding max-w-md mx-auto flex flex-col gap-stack-gap-lg">
+<!-- Page Intro -->
+<section class="space-y-2">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Peta Jalan Finansial Anda</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Langkah demi langkah mencapai kemandirian finansial, disesuaikan dengan profil risiko Anda.</p>
+</section>
+<!-- Vertical Timeline -->
+<section class="relative ml-2 border-l-2 border-outline-variant/30 space-y-8 mt-4 pb-4">
+<!-- Phase 1: Fondasi -->
+<div class="relative pl-6">
+<!-- Glowing Active Dot -->
+<div class="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-primary ring-4 ring-surface-container-lowest shadow-[0_0_10px_rgba(96,236,168,0.6)]"></div>
+<div class="bg-surface-container-low/60 backdrop-blur-xl border border-white/5 rounded-xl p-glass-padding relative overflow-hidden group hover:bg-white/5 transition-colors">
+<!-- Subtle glow behind card -->
+<div class="absolute -top-10 -right-10 w-20 h-20 bg-primary/10 rounded-full blur-xl pointer-events-none"></div>
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-md text-label-md text-primary tracking-widest uppercase">Fase 1: Jangka Pendek</span>
+<span class="material-symbols-outlined text-primary/50 text-sm">lock_open</span>
+</div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-1 text-[18px]">Membangun Fondasi</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Fokus pada pelunasan utang konsumtif dan mengumpulkan dana darurat minimal 3 bulan pengeluaran rutin.</p>
+</div>
+</div>
+<!-- Phase 2: Pertumbuhan -->
+<div class="relative pl-6">
+<div class="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-surface-variant ring-4 ring-surface-container-lowest"></div>
+<div class="bg-surface-container/30 backdrop-blur-md border border-white/5 rounded-xl p-glass-padding opacity-75">
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant tracking-widest uppercase">Fase 2: Menengah</span>
+<span class="material-symbols-outlined text-on-surface-variant/50 text-sm">lock</span>
+</div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-1 text-[18px]">Pertumbuhan Aset</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Mulai investasi rutin bulanan. Instrumen awal yang disarankan: RDPU dan Obligasi Negara.</p>
+</div>
+</div>
+<!-- Phase 3: Masa Depan -->
+<div class="relative pl-6">
+<div class="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-surface-variant ring-4 ring-surface-container-lowest"></div>
+<div class="bg-surface-container/30 backdrop-blur-md border border-white/5 rounded-xl p-glass-padding opacity-75">
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant tracking-widest uppercase">Fase 3: Jangka Panjang</span>
+<span class="material-symbols-outlined text-on-surface-variant/50 text-sm">lock</span>
+</div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-1 text-[18px]">Masa Depan &amp; Pensiun</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Diversifikasi tingkat lanjut ke pasar saham indeks dan akumulasi dana pensiun jangka panjang.</p>
+</div>
+</div>
+<!-- Timeline end fade -->
+<div class="absolute bottom-0 left-[-2px] w-1 h-16 bg-gradient-to-t from-surface-container-lowest to-transparent pointer-events-none"></div>
+</section>
+<!-- Glossary Section -->
+<section class="mt-4 border-t border-white/5 pt-6">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-[16px] text-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">menu_book</span>
+                Glosarium Sesi Ini
+            </h3>
+<div class="flex flex-wrap gap-2">
+<!-- Chips -->
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container border border-white/5 cursor-pointer hover:bg-surface-bright transition-colors">
+<span class="font-label-md text-label-md text-on-surface">RDPU</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container border border-white/5 cursor-pointer hover:bg-surface-bright transition-colors">
+<span class="font-label-md text-label-md text-on-surface">Diversifikasi</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container border border-white/5 cursor-pointer hover:bg-surface-bright transition-colors">
+<span class="font-label-md text-label-md text-on-surface">Dana Darurat</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container border border-white/5 cursor-pointer hover:bg-surface-bright transition-colors">
+<span class="font-label-md text-label-md text-on-surface">Profil Risiko</span>
+</div>
+</div>
+</section>
+<!-- Disclaimer Card -->
+<section class="mt-2 mb-8 bg-surface-container-high/40 rounded-xl p-4 border border-white/5">
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-on-surface-variant/60 text-[20px]">info</span>
+<p class="font-body-sm text-[12px] leading-relaxed text-on-surface-variant/80">
+                    Peta jalan ini dihasilkan oleh AI berdasarkan profil awal Anda sebagai referensi edukasi. Keputusan finansial nyata sebaiknya disesuaikan dengan kondisi aktual dan berkonsultasi dengan penasihat keuangan bersertifikat.
+                </p>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface-container-lowest/40 backdrop-blur-lg border-t border-white/5 flex justify-around items-center px-4 py-3 w-full md:hidden">
+<!-- Inactive -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 p-2 hover:text-primary transition-all">
+<span class="material-symbols-outlined">chat</span>
+</button>
+<!-- Inactive -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 p-2 hover:text-primary transition-all">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+</button>
+<!-- Active (Insights/Roadmap fits here semantically) -->
+<button class="flex flex-col items-center justify-center bg-primary text-on-primary rounded-full p-2 scale-110 shadow-[0_0_15px_rgba(96,236,168,0.4)] transition-all duration-150">
+<span class="material-symbols-outlined fill">insights</span>
+</button>
+<!-- Inactive -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 p-2 hover:text-primary transition-all">
+<span class="material-symbols-outlined">history</span>
+</button>
+<!-- Inactive -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 p-2 hover:text-primary transition-all">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</nav>
+</body></html>

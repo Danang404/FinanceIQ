@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FinanceIQ - Investment Allocation</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Sora:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#10141a",
+                        "on-error": "#690005",
+                        "tertiary": "#ffc6b8",
+                        "inverse-primary": "#006c45",
+                        "background": "#10141a",
+                        "error-container": "#93000a",
+                        "on-primary-container": "#005434",
+                        "secondary": "#ffb952",
+                        "on-surface": "#dfe2eb",
+                        "primary-fixed": "#71fcb6",
+                        "on-tertiary-fixed": "#3c0700",
+                        "on-background": "#dfe2eb",
+                        "surface-container-high": "#262a31",
+                        "on-primary-fixed": "#002112",
+                        "surface-container-lowest": "#0a0e14",
+                        "outline": "#869489",
+                        "surface-container-low": "#181c22",
+                        "error": "#ffb4ab",
+                        "inverse-surface": "#dfe2eb",
+                        "primary": "#60eca8",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-container": "#ff9e86",
+                        "surface-tint": "#51df9c",
+                        "on-secondary-fixed": "#291800",
+                        "tertiary-fixed-dim": "#ffb4a2",
+                        "on-secondary-fixed-variant": "#633f00",
+                        "on-tertiary": "#5f1503",
+                        "on-primary": "#003822",
+                        "surface-variant": "#31353c",
+                        "on-surface-variant": "#bbcabe",
+                        "inverse-on-surface": "#2d3137",
+                        "surface-dim": "#10141a",
+                        "on-tertiary-fixed-variant": "#7e2c17",
+                        "primary-fixed-dim": "#51df9c",
+                        "outline-variant": "#3d4a41",
+                        "on-primary-fixed-variant": "#005233",
+                        "secondary-fixed-dim": "#ffb952",
+                        "secondary-fixed": "#ffddb3",
+                        "primary-container": "#3ecf8e",
+                        "on-tertiary-container": "#802d18",
+                        "tertiary-fixed": "#ffdad2",
+                        "surface-container": "#1c2026",
+                        "secondary-container": "#c48410",
+                        "on-secondary": "#452b00",
+                        "surface-bright": "#353940",
+                        "on-secondary-container": "#3c2500",
+                        "surface-container-highest": "#31353c"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-gap-md": "16px",
+                        "stack-gap-sm": "8px",
+                        "container-padding": "20px",
+                        "glass-padding": "16px",
+                        "stack-gap-lg": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Sora"],
+                        "display": ["Sora"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Sora"],
+                        "label-md": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md h-screen w-full overflow-hidden flex flex-col relative selection:bg-primary/30">
+<!-- Decorative Ambient Background -->
+<div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px] pointer-events-none"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] rounded-full bg-secondary/5 blur-[100px] pointer-events-none"></div>
+<!-- TopAppBar -->
+<header class="bg-surface/60 backdrop-blur-xl border-b border-white/10 shadow-none fixed top-0 w-full z-50 flex justify-between items-center px-container-padding h-16 max-w-full">
+<!-- Logo Area -->
+<div class="flex items-center gap-4 lg:ml-72"> <!-- Push logo past sidebar on desktop if needed, or keep it left -->
+<span class="font-display text-display text-primary tracking-tight font-headline-lg-mobile text-headline-lg-mobile">FinanceIQ</span>
+</div>
+<!-- Actions Area -->
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center px-3 py-1.5 rounded-full border border-white/10 bg-surface-bright/50 text-on-surface-variant font-label-md text-label-md">
+<span class="w-2 h-2 rounded-full bg-primary mr-2 animate-pulse"></span>
+                Mode: Pemula
+            </div>
+<button class="text-on-surface-variant hover:bg-white/5 transition-colors p-2 rounded-full active:scale-95 transition-transform flex items-center justify-center">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+<button class="text-on-surface-variant hover:bg-white/5 transition-colors p-2 rounded-full active:scale-95 transition-transform flex items-center justify-center">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</header>
+<!-- Main Layout Container -->
+<div class="flex h-full w-full pt-16">
+<!-- SideNavBar (Desktop) -->
+<nav class="h-full w-72 hidden lg:flex flex-col border-r border-white/5 bg-surface-container-low/80 backdrop-blur-2xl shadow-none fixed left-0 top-0 bottom-0 z-40 pt-20 pb-6">
+<!-- Header User Info -->
+<div class="px-6 mb-8 mt-2 flex flex-col gap-2">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden border border-white/10">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5s2OeK-uizY-AsTB0VrpsCO9O4CISzbE2uIgFlq04seFdFhc_ao-NUU7c9AwVaISyFgK2vtWKMCHgSejKXGP-xfEeJ7k2m7O8REEToarC2D9g7m_FsXCo6xNRP_H9ypmyujKwUQzCplmFmGpGcNj8wSw8N_YkjtJPN1Qta9s5EhuwGtc_uyQ3zWN1_wic6q3UOh8c-WW40gYaEhjkCciKYbAaTOy6rftSyqvpth4euyjzBpU4sX_FTlk_QEqT-i2rUje449Dtuj8"/>
+</div>
+<div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface text-[16px]">Halo, Financial Achiever</h2>
+<p class="font-body-sm text-body-sm text-primary/80">Status: Aktif Membangun</p>
+</div>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="flex-1 px-4 space-y-2">
+<!-- Active Item: Beranda -->
+<a class="flex items-center gap-3 px-4 py-3 bg-primary/15 text-primary rounded-xl font-semibold duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+<span class="font-body-md text-body-md">Beranda</span>
+</a>
+<!-- Inactive Items -->
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 rounded-xl duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">insights</span>
+<span class="font-body-md text-body-md">Analisa</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 rounded-xl duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">map</span>
+<span class="font-body-md text-body-md">Rencana</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 rounded-xl duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-body-md text-body-md">Riwayat</span>
+</a>
+</div>
+<!-- Footer Upgrade & Actions -->
+<div class="px-4 mt-auto space-y-4">
+<button class="w-full py-3 px-4 rounded-xl bg-surface-bright border border-white/5 text-primary font-label-md text-label-md flex items-center justify-center gap-2 hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+                    Upgrade ke Pro
+                </button>
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-white/5 rounded-xl duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-[20px]">help</span>
+<span class="font-body-sm text-body-sm">Bantuan</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-white/5 rounded-xl duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+<span class="font-body-sm text-body-sm">Keluar</span>
+</a>
+</div>
+</div>
+</nav>
+<!-- Main Content Area (Two Panels) -->
+<main class="flex-1 lg:ml-72 flex w-full h-full relative">
+<!-- Left/Center Panel: Chat Thread -->
+<section class="flex-1 flex flex-col h-full bg-surface-dim relative">
+<!-- Chat History Container -->
+<div class="flex-1 overflow-y-auto px-container-padding py-8 space-y-stack-gap-lg">
+<!-- Date Separator -->
+<div class="flex justify-center">
+<span class="px-3 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md border border-white/5">Hari Ini</span>
+</div>
+<!-- User Message -->
+<div class="flex justify-end">
+<div class="max-w-[75%] bg-surface-variant text-on-surface font-body-md text-body-md px-glass-padding py-3 rounded-2xl rounded-tr-sm shadow-sm">
+                            Saya ingin mulai investasi, tapi masih pemula. Uang dingin ada sekitar 3 juta per bulan.
+                        </div>
+</div>
+<!-- AI Message -->
+<div class="flex justify-start">
+<div class="max-w-[85%] flex gap-4">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 border border-primary/30">
+<span class="material-symbols-outlined text-primary text-[16px]">smart_toy</span>
+</div>
+<div class="bg-surface-container-low/40 backdrop-blur-[12px] border border-white/10 text-on-surface font-body-md text-body-md p-glass-padding rounded-2xl rounded-tl-sm flex flex-col gap-4">
+<p>Halo! Bagus sekali Anda sudah menyiapkan dana khusus. Mengingat Anda mengaktifkan Mode Pemula, mari kita fokus pada instrumen dengan risiko rendah dan likuiditas tinggi terlebih dahulu.</p>
+<p>Berdasarkan sisa dana bulanan (Rp 3.000.000), ini adalah rekomendasi alokasi investasi awal Anda:</p>
+<!-- Investment Allocation Bento Card -->
+<div class="bg-surface-container/50 border border-white/5 rounded-xl p-4 flex flex-col gap-4 mt-2">
+<div class="flex justify-between items-center mb-1">
+<h3 class="font-headline-lg-mobile text-[16px] text-on-surface">Alokasi Investasi Bulanan</h3>
+<span class="font-label-md text-label-md text-primary bg-primary/10 px-2 py-1 rounded-md">Total: Rp 3.000.000</span>
+</div>
+<!-- Row 1: RDPU -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center font-body-sm text-body-sm">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="text-on-surface">Reksa Dana Pasar Uang (RDPU)</span>
+</div>
+<span class="text-on-surface-variant">Rp 2.100.000 (70%)</span>
+</div>
+<div class="w-full bg-surface-bright rounded-full h-2 overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 70%"></div>
+</div>
+</div>
+<!-- Row 2: Index Fund -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center font-body-sm text-body-sm">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary/40"></div>
+<span class="text-on-surface">Index Fund Saham (Risiko Terukur)</span>
+</div>
+<span class="text-on-surface-variant">Rp 900.000 (30%)</span>
+</div>
+<div class="w-full bg-surface-bright rounded-full h-2 overflow-hidden">
+<div class="bg-primary/60 h-full rounded-full" style="width: 30%"></div>
+</div>
+</div>
+<div class="mt-2 pt-3 border-t border-white/5 flex gap-2">
+<button class="flex-1 py-2 bg-primary text-on-primary rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity">Terapkan Alokasi</button>
+<button class="flex-1 py-2 bg-transparent border border-white/20 text-on-surface rounded-full font-label-md text-label-md hover:bg-white/5 transition-colors">Sesuaikan</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Spacer for input area -->
+<div class="h-24"></div>
+</div>
+<!-- Chat Input Area -->
+<div class="absolute bottom-0 w-full p-container-padding bg-gradient-to-t from-surface-dim via-surface-dim to-transparent pb-6">
+<div class="relative w-full max-w-4xl mx-auto">
+<input class="w-full bg-surface-container-high/40 backdrop-blur-md border border-white/10 rounded-full py-4 pl-6 pr-14 text-on-surface font-body-md text-body-md placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary/50 transition-colors" placeholder="Tanyakan seputar investasi..." type="text"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-primary text-on-primary rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">arrow_upward</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Right Panel: Session Summary (Desktop Only) -->
+<aside class="w-[360px] hidden xl:flex flex-col border-l border-white/5 bg-surface-container-lowest/30 p-container-padding overflow-y-auto space-y-stack-gap-lg">
+<h3 class="font-headline-lg-mobile text-[18px] text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">data_usage</span>
+                    Session Summary
+                </h3>
+<!-- Financial Snapshot Glass Card -->
+<div class="bg-surface-container/40 backdrop-blur-[20px] border border-white/10 rounded-xl p-glass-padding flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Financial Snapshot</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]">more_horiz</span>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-surface-bright/30 rounded-lg p-3 border border-white/5">
+<span class="font-label-md text-label-md text-on-surface-variant block mb-1">Income</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">Rp 10jt</span>
+</div>
+<div class="bg-surface-bright/30 rounded-lg p-3 border border-white/5">
+<span class="font-label-md text-label-md text-on-surface-variant block mb-1">Expense</span>
+<span class="font-body-md text-body-md text-error/90 font-semibold">Rp 7jt</span>
+</div>
+</div>
+<div class="bg-primary-container/10 rounded-lg p-4 border border-primary/20 flex flex-col gap-1">
+<span class="font-label-md text-label-md text-primary block">Available for Savings</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Rp 3.000.000</span>
+</div>
+</div>
+<!-- Running Glossary Glass Card -->
+<div class="bg-surface-container/40 backdrop-blur-[20px] border border-white/10 rounded-xl p-glass-padding flex flex-col gap-4 flex-1">
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Running Glossary</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]">menu_book</span>
+</div>
+<div class="space-y-4 overflow-y-auto pr-2">
+<!-- Glossary Item 1 -->
+<div class="flex flex-col gap-1 border-l-2 border-primary/40 pl-3">
+<span class="font-body-sm text-body-sm text-primary font-semibold">RDPU (Reksa Dana Pasar Uang)</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                                Wadah investasi yang mengumpulkan dana dari investor untuk diinvestasikan ke instrumen pasar uang (deposito, obligasi jatuh tempo &lt; 1 tahun). Sangat likuid dan rendah risiko.
+                            </p>
+</div>
+<!-- Glossary Item 2 -->
+<div class="flex flex-col gap-1 border-l-2 border-secondary/40 pl-3">
+<span class="font-body-sm text-body-sm text-secondary font-semibold">Diversifikasi</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                                Strategi membagi dana investasi ke berbagai instrumen untuk mengurangi risiko. "Jangan menaruh semua telur dalam satu keranjang."
+                            </p>
+</div>
+<!-- Glossary Item 3 -->
+<div class="flex flex-col gap-1 border-l-2 border-outline/40 pl-3">
+<span class="font-body-sm text-body-sm text-outline font-semibold">Index Fund</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                                Reksa dana yang portofolionya meniru susunan saham pada indeks tertentu (misal: LQ45). Lebih pasif namun kinerjanya sejalan dengan pasar.
+                            </p>
+</div>
+</div>
+</div>
+</aside>
+</main>
+</div>
+</body></html>
