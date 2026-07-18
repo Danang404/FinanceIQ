@@ -89,7 +89,7 @@ export default function LandingPage() {
             <a href="#workflow" className="text-sm font-semibold text-gray-400 hover:text-white transition-colors tracking-wide">Workflow</a>
             <a href="#faq" className="text-sm font-semibold text-gray-400 hover:text-white transition-colors tracking-wide">FAQ</a>
           </div>
-          <Link href="/beranda">
+          <Link href="/login">
             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="bg-white text-black hover:bg-primary hover:text-[#052e16] px-6 py-2.5 rounded-full text-sm font-bold transition-colors shadow-lg">
               Masuk Sistem
             </motion.button>
@@ -123,9 +123,13 @@ export default function LandingPage() {
             </motion.p>
             
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
-              <Link href="/beranda" className="w-full sm:w-auto">
-                <motion.button whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto bg-primary text-[#052e16] px-10 py-4 rounded-full font-extrabold text-lg shadow-[0_0_40px_rgba(96,236,168,0.4)] hover:shadow-[0_0_60px_rgba(96,236,168,0.6)] transition-all flex items-center justify-center gap-3 group">
-                  Uji Coba Sistem 
+              <Link href="/login">
+                <motion.button 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-8 py-4 rounded-xl bg-white text-black font-semibold text-lg hover:bg-gray-100 transition-colors shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] flex items-center justify-center mx-auto group gap-2"
+                >
+                  Mulai Eksplorasi
                   <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
                 </motion.button>
               </Link>
@@ -143,15 +147,15 @@ export default function LandingPage() {
         <section className="py-12 border-y border-white/5 bg-[#0a0a0a]/50 backdrop-blur-sm overflow-hidden relative">
           <div className="absolute left-0 w-32 h-full bg-gradient-to-r from-[#030303] to-transparent z-10"></div>
           <div className="absolute right-0 w-32 h-full bg-gradient-to-l from-[#030303] to-transparent z-10"></div>
-          <div className="flex w-[200%] animate-[marquee_20s_linear_infinite] items-center opacity-60">
+          <div className="flex w-[200vw] animate-[marquee_20s_linear_infinite] items-center opacity-60">
             {/* Double the content for smooth infinite scroll */}
             {[1, 2].map((i) => (
-              <div key={i} className="flex flex-1 justify-around items-center min-w-full">
-                <span className="text-xl font-bold font-display flex items-center gap-3"><span className="material-symbols-outlined text-3xl">code</span> Next.js 14</span>
-                <span className="text-xl font-bold font-display flex items-center gap-3"><span className="material-symbols-outlined text-3xl">api</span> FastAPI</span>
-                <span className="text-xl font-bold font-display flex items-center gap-3"><span className="material-symbols-outlined text-3xl">memory</span> OpenAI LLM</span>
-                <span className="text-xl font-bold font-display flex items-center gap-3"><span className="material-symbols-outlined text-3xl">lan</span> LangChain</span>
-                <span className="text-xl font-bold font-display flex items-center gap-3"><span className="material-symbols-outlined text-3xl">brush</span> TailwindCSS</span>
+              <div key={i} className="flex justify-around items-center w-[100vw]">
+                <span className="text-xl font-bold font-display flex items-center gap-3 whitespace-nowrap"><span className="material-symbols-outlined text-3xl">code</span> Next.js 14</span>
+                <span className="text-xl font-bold font-display flex items-center gap-3 whitespace-nowrap"><span className="material-symbols-outlined text-3xl">api</span> FastAPI</span>
+                <span className="text-xl font-bold font-display flex items-center gap-3 whitespace-nowrap"><span className="material-symbols-outlined text-3xl">memory</span> OpenAI LLM</span>
+                <span className="text-xl font-bold font-display flex items-center gap-3 whitespace-nowrap"><span className="material-symbols-outlined text-3xl">lan</span> LangChain</span>
+                <span className="text-xl font-bold font-display flex items-center gap-3 whitespace-nowrap"><span className="material-symbols-outlined text-3xl">brush</span> TailwindCSS</span>
               </div>
             ))}
           </div>
@@ -253,7 +257,7 @@ export default function LandingPage() {
                 <p className="text-gray-400 text-sm leading-relaxed mb-8 max-w-sm">
                   Implementasi konseptual arsitektur agen terdistribusi untuk otomasi analisis kelayakan dan peningkatan literasi keuangan personal.
                 </p>
-                <Link href="/beranda">
+                <Link href="/login">
                   <button className="bg-white text-black hover:bg-primary hover:text-[#052e16] px-6 py-3 rounded-full text-sm font-bold transition-all">
                     Buka Aplikasi
                   </button>

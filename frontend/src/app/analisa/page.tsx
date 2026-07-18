@@ -98,8 +98,8 @@ export default function AnalisaPage() {
                 <span className="material-symbols-outlined text-3xl">psychology</span>
               </div>
               <h4 className="font-bold text-blue-100 text-2xl mb-2">Kesimpulan Akhir Risk Profiler</h4>
-              <p className="text-base text-blue-200/80 leading-relaxed">
-                Kemampuan Anda menahan risiko (Risk Capacity) berbanding lurus dengan berapa lama Anda bisa bertahan di masa krisis (Stress Test). Jika simulasi gagal, sangat tidak disarankan untuk menyentuh Saham atau Kripto. Prioritaskan 100% surplus Anda ke instrumen likuid sampai batas aman tercapai.
+              <p className="text-base text-blue-200/80 leading-relaxed whitespace-pre-wrap">
+                {stressTestData?.conclusion || "Data tidak tersedia."}
               </p>
             </div>
           </div>
@@ -129,7 +129,7 @@ export default function AnalisaPage() {
                 </p>
                 <div className="bg-error/10 p-4 rounded-xl border border-error/20 mt-auto">
                   <strong className="text-error block mb-1">Dampak ke Anda:</strong>
-                  <p className="text-xs text-error/80 leading-relaxed">Berkat profil <strong>{correctedRisk}</strong> Anda yang diatur AI, portofolio Anda diproyeksikan hanya akan turun maksimal <strong>{isHealthy ? '-8%' : '-2%'}</strong> secara total. Uang Anda selamat karena mayoritas dana sudah diparkir di instrumen Obligasi (SBN) yang kebal resesi.</p>
+                  <p className="text-xs text-error/80 leading-relaxed whitespace-pre-wrap">{stressTestData?.marketCrashImpact || "Data tidak tersedia."}</p>
                 </div>
               </div>
 
@@ -143,10 +143,8 @@ export default function AnalisaPage() {
                 </p>
                 <div className="bg-secondary/10 p-4 rounded-xl border border-secondary/20 mt-auto">
                   <strong className="text-secondary block mb-1">Dampak ke Anda:</strong>
-                  <p className="text-xs text-secondary/80 leading-relaxed">
-                    {isHealthy ? 
-                      "Anda terlindungi! Karena AI memasukkan porsi Saham & Kripto (High-Alpha) di portofolio Anda, imbal hasil dari aset tersebut diproyeksikan cukup tinggi untuk mengalahkan laju inflasi." :
-                      "PERINGATAN: Karena Anda berada di profil Konservatif, aset Anda aman dari penurunan harga, NAMUN Anda berisiko tergerus inflasi karena keuntungan (bunga) dari deposito seringkali kalah cepat dengan kenaikan harga barang."}
+                  <p className="text-xs text-secondary/80 leading-relaxed whitespace-pre-wrap">
+                    {stressTestData?.hyperinflationImpact || "Data tidak tersedia."}
                   </p>
                 </div>
               </div>
@@ -161,10 +159,8 @@ export default function AnalisaPage() {
                 </p>
                 <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20 mt-auto">
                   <strong className="text-blue-400 block mb-1">Dampak ke Anda:</strong>
-                  <p className="text-xs text-blue-400/80 leading-relaxed">
-                    {emergencyProgress >= 100 ? 
-                      "SANGAT AMAN! Anda memiliki bantalan uang tunai darurat yang sudah melampaui target. Anda bisa hidup tenang mencari pekerjaan baru selama berbulan-bulan tanpa harus memecah tabungan investasi Anda." :
-                      `BAHAYA! Dana darurat Anda baru terkumpul ${emergencyProgress.toFixed(1)}%. Anda kemungkinan besar akan terpaksa mencairkan investasi Anda secara terburu-buru dengan kerugian (Cut Loss) sekadar untuk makan bulan depan.`}
+                  <p className="text-xs text-blue-400/80 leading-relaxed whitespace-pre-wrap">
+                    {stressTestData?.jobLossImpact || "Data tidak tersedia."}
                   </p>
                 </div>
               </div>
