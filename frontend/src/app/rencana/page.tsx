@@ -62,10 +62,10 @@ export default function RencanaPage() {
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-bold text-white">RDPU</span>
-                        <span className="text-secondary font-bold">Rp {(surplus * 0.3).toLocaleString('id-ID')}</span>
+                        <span className="text-secondary font-bold">Rp {(wealthAllocationData?.allocations?.rdpu || 0).toLocaleString('id-ID')}</span>
                       </div>
                       <div className="w-full h-2 bg-surface-container rounded-full overflow-hidden">
-                        <div className="h-full bg-secondary w-[30%]"></div>
+                        <div className="h-full bg-secondary" style={{ width: `${surplus > 0 ? Math.round(((wealthAllocationData?.allocations?.rdpu || 0) / surplus) * 100) : 0}%` }}></div>
                       </div>
                       <p className="text-xs text-on-surface-variant mt-2">Gunakan aplikasi seperti Bareksa/Bibit. Beli produk RDPU Sucorinvest atau Syailendra.</p>
                     </div>
@@ -73,10 +73,10 @@ export default function RencanaPage() {
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-bold text-white">SBN / SBR</span>
-                        <span className="text-blue-400 font-bold">Rp {(surplus * 0.35).toLocaleString('id-ID')}</span>
+                        <span className="text-blue-400 font-bold">Rp {(wealthAllocationData?.allocations?.sbn || 0).toLocaleString('id-ID')}</span>
                       </div>
                       <div className="w-full h-2 bg-surface-container rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-400 w-[35%]"></div>
+                        <div className="h-full bg-blue-400" style={{ width: `${surplus > 0 ? Math.round(((wealthAllocationData?.allocations?.sbn || 0) / surplus) * 100) : 0}%` }}></div>
                       </div>
                       <p className="text-xs text-on-surface-variant mt-2">Tunggu masa penawaran dari Kemenkeu, beli via Bank atau platform mitra distribusi.</p>
                     </div>
@@ -84,10 +84,10 @@ export default function RencanaPage() {
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-bold text-white">Index Fund (LQ45)</span>
-                        <span className="text-primary font-bold">Rp {(surplus * 0.25).toLocaleString('id-ID')}</span>
+                        <span className="text-primary font-bold">Rp {(wealthAllocationData?.allocations?.indexFund || 0).toLocaleString('id-ID')}</span>
                       </div>
                       <div className="w-full h-2 bg-surface-container rounded-full overflow-hidden">
-                        <div className="h-full bg-primary w-[25%]"></div>
+                        <div className="h-full bg-primary" style={{ width: `${surplus > 0 ? Math.round(((wealthAllocationData?.allocations?.indexFund || 0) / surplus) * 100) : 0}%` }}></div>
                       </div>
                       <p className="text-xs text-on-surface-variant mt-2">Beli ETF X-LQ45 secara rutin setiap tanggal gajian tanpa melihat harga pasar (DCA).</p>
                     </div>
@@ -95,10 +95,10 @@ export default function RencanaPage() {
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-bold text-white">Kripto / Bluechip</span>
-                        <span className="text-purple-400 font-bold">Rp {(surplus * 0.1).toLocaleString('id-ID')}</span>
+                        <span className="text-purple-400 font-bold">Rp {(wealthAllocationData?.allocations?.crypto || 0).toLocaleString('id-ID')}</span>
                       </div>
                       <div className="w-full h-2 bg-surface-container rounded-full overflow-hidden">
-                        <div className="h-full bg-purple-400 w-[10%]"></div>
+                        <div className="h-full bg-purple-400" style={{ width: `${surplus > 0 ? Math.round(((wealthAllocationData?.allocations?.crypto || 0) / surplus) * 100) : 0}%` }}></div>
                       </div>
                       <p className="text-xs text-on-surface-variant mt-2">Sisihkan untuk BTC atau saham perbankan kapitalisasi besar saat pasar sedang terkoreksi.</p>
                     </div>

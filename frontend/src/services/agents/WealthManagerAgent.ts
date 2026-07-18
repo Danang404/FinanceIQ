@@ -1,19 +1,32 @@
 import { RiskProfileResult, WealthAllocationResult } from './types';
+import { callAgentLLM } from './LLMService';
 
-/**
- * AGENT 2: Wealth Manager
- * LLM Integration Plan:
- * 1. Convert `RiskProfileResult` (output from Agent 1) into a prompt string.
- * 2. Send to LLM (e.g. "You are an expert Wealth Manager. Based on this risk profile, allocate their surplus...").
- * 3. Instruct LLM to return JSON matching `WealthAllocationResult`.
- * 4. Parse JSON and return.
- */
 export class WealthManagerAgent {
   public async generatePlan(riskProfile: RiskProfileResult): Promise<WealthAllocationResult> {
     const surplus = riskProfile.surplus;
 
-    // --- MOCK LOGIC (To be replaced by LLM) ---
-    // Calculate simple 10-year projection (7% compounding)
+    const a2SystemPrompt = `Kamu adalah pakar Wealth Management. Diberikan input profil risiko JSON.
+Tugasmu adalah memberikan alokasi investasi bulanan (RDPU, SBN, IndexFund, Crypto) dan proyeksi pertumbuhan uangnya selama 10 tahun (10 elemen array).
+Kembalikan HANYA format JSON valid tanpa teks lain:
+{
+  "yearlyInvestment": number, // surplus bulanan * 12
+  "allocations": { "rdpu": number, "sbn": number, "indexFund": number, "crypto": number }, // alokasi dalam rupiah berdasarkan persentase
+  "projections": number[], // array 10 angka, proyeksi akumulasi per tahun selama 10 tahun
+  "maxProjection": number,
+  "totalOriginalCapital": number,
+  "pureInterest": number,
+  "message": string // Pesan profesional mengenai alokasi tersebut
+}`;
+    const a2UserPrompt = JSON.stringify(riskProfile);
+
+    try {
+        const result = await callAgentLLM(a2SystemPrompt, a2UserPrompt, 1);
+        if (result) return result;
+    } catch(err) {
+        console.error("Agent 2 LLM failed, falling back to mock:", err);
+    }
+
+    // --- FALLBACK MOCK LOGIC ---
     const calculateProjection = () => {
       let currentTotal = 0;
       const yearlyInvestment = surplus * 12;
@@ -34,7 +47,6 @@ export class WealthManagerAgent {
     const finalWealth = projections[9] || 0;
     const pureInterest = finalWealth - totalOriginalCapital;
 
-    // Define mock allocations based on corrected risk
     let allocations = { rdpu: 0, sbn: 0, indexFund: 0, crypto: 0 };
     if (surplus > 0) {
       if (riskProfile.correctedRisk === "KONSERVATIF") {
@@ -47,8 +59,8 @@ export class WealthManagerAgent {
     }
 
     const message = surplus > 0 
-      ? `Perhatikan grafik J-Curve di atas. Inilah cara orang kaya melipatgandakan hartanya. Tantangan terbesar Anda adalah konsistensi berinvestasi rutin Rp ${surplus.toLocaleString('id-ID')} tiap bulan selama 120 bulan ke depan tanpa henti.`
-      : `Saat ini Anda tidak memiliki sisa gaji (surplus) untuk diinvestasikan. Prioritas utama Anda adalah memangkas pengeluaran atau melunasi hutang konsumtif terlebih dahulu.`;
+      ? `[FALLBACK] Perhatikan grafik J-Curve di atas. Inilah cara orang kaya melipatgandakan hartanya...`
+      : `[FALLBACK] Saat ini Anda tidak memiliki sisa gaji (surplus) untuk diinvestasikan...`;
 
     return {
       yearlyInvestment,

@@ -1,16 +1,27 @@
 "use client";
-import React from 'react';
-import { usePathname } from 'next/navigation';
+import React, { useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import { FinanceProvider } from '../context/FinanceContext';
+import { AuthProvider, useAuthContext } from '../context/AuthContext';
 
-export default function AppWrapper({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const isLandingPage = pathname === '/';
+function ProtectedDashboard({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuthContext();
+  const router = useRouter();
 
-  if (isLandingPage) {
-    return <>{children}</>;
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen w-full bg-background flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
   return (
@@ -23,5 +34,20 @@ export default function AppWrapper({ children }: { children: React.ReactNode }) 
         </div>
       </div>
     </FinanceProvider>
+  );
+}
+
+export default function AppWrapper({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isPublicPage = pathname === '/' || pathname === '/login';
+
+  return (
+    <AuthProvider>
+      {isPublicPage ? (
+        <>{children}</>
+      ) : (
+        <ProtectedDashboard>{children}</ProtectedDashboard>
+      )}
+    </AuthProvider>
   );
 }
