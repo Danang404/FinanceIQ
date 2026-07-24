@@ -38,6 +38,23 @@ export interface RiskProfileResult {
   explanation: string;
 }
 
+export interface RecommendedInstrumentDetail {
+  name: string;
+  id?: string;
+  ticker?: string;
+  manajer?: string;
+  return_1y?: number;
+  kupon?: number;
+  tenor?: string;
+  nav_per_unit?: number;
+  price?: number;
+  change_pct?: number;
+  min_investasi?: number;
+  risk?: string;
+  currency?: string; // 'USD' untuk kripto/emas, default IDR
+  whyRecommended: string; // Alasan AI merekomendasikan ini
+}
+
 export interface WealthAllocationResult {
   yearlyInvestment: number;
   allocations: {
@@ -51,6 +68,12 @@ export interface WealthAllocationResult {
   totalOriginalCapital: number;
   pureInterest: number;
   message: string;
+  recommendedInstruments?: {
+    rdpu: RecommendedInstrumentDetail[];
+    sbn: RecommendedInstrumentDetail[];
+    indexFund: RecommendedInstrumentDetail[];
+    crypto: RecommendedInstrumentDetail[];
+  };
 }
 
 export interface StressTestResult {

@@ -4,9 +4,66 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFinanceContext } from "../context/FinanceContext";
 import { useRouter } from "next/navigation";
-import { getChatService } from "../../services/agents/ChatService";
+import { getChatService, PortfolioSnapshot } from "../../services/agents/ChatService";
 import { getInstruments, getMarketSummary } from "../../services/agents/MarketDataService";
-import { MarketInstrument } from "../../services/agents/types";
+import { MarketInstrument, RecommendedInstrumentDetail } from "../../services/agents/types";
+import { useAuthContext } from "../context/AuthContext";
+
+// ============================================================
+// RUPIAH FORMATTING HELPERS
+// ============================================================
+function formatRupiah(value: string): string {
+  const num = value.replace(/\D/g, "");
+  if (!num) return "";
+  return Number(num).toLocaleString("id-ID");
+}
+
+function parseRupiah(formatted: string): string {
+  return formatted.replace(/\./g, "").replace(/,/g, "");
+}
+
+// ============================================================
+// RUPIAH INPUT COMPONENT
+// ============================================================
+function RupiahInput({
+  value, onChange, placeholder, id
+}: {
+  value: string;
+  onChange: (raw: string) => void;
+  placeholder?: string;
+  id?: string;
+}) {
+  const [display, setDisplay] = useState(value ? formatRupiah(value) : "");
+
+  useEffect(() => {
+    // Sync display if context value changed externally (e.g. reset)
+    if (!value) setDisplay("");
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = parseRupiah(e.target.value);
+    const formatted = formatRupiah(raw);
+    setDisplay(formatted);
+    onChange(raw);
+  };
+
+  return (
+    <div className="relative">
+      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant font-bold text-sm pointer-events-none select-none">
+        Rp
+      </span>
+      <input
+        id={id}
+        type="text"
+        inputMode="numeric"
+        value={display}
+        onChange={handleChange}
+        placeholder={placeholder || "0"}
+        className="w-full bg-surface-container border border-white/10 rounded-xl p-3.5 pl-10 text-on-surface font-semibold focus:border-primary/50 outline-none transition-colors placeholder:text-on-surface-variant/30"
+      />
+    </div>
+  );
+}
 
 // ============================================================
 // INSTRUMENT CHIP COMPONENT
@@ -24,6 +81,105 @@ function InstrumentChip({ label, selected, onClick }: { label: string; selected:
     >
       {label}
     </button>
+  );
+}
+
+// ============================================================
+// INSTRUMENT BREAKDOWN SECTION COMPONENT
+// ============================================================
+function InstrumentBreakdownSection({
+  title, icon, colorClass, borderClass, bgClass, allocation, instruments, badge, badgeColor,
+}: {
+  title: string;
+  icon: string;
+  colorClass: string;
+  borderClass: string;
+  bgClass: string;
+  allocation: number;
+  instruments: import("../../services/agents/types").RecommendedInstrumentDetail[];
+  badge: string;
+  badgeColor: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className={`border ${borderClass} ${bgClass} rounded-2xl overflow-hidden`}>
+      {/* Header */}
+      <button
+        type="button"
+        onClick={() => setExpanded(v => !v)}
+        className="w-full flex items-center justify-between p-5 hover:bg-white/5 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <span className={`material-symbols-outlined ${colorClass} text-[22px]`}>{icon}</span>
+          <div className="text-left">
+            <p className="font-bold text-white text-sm">{title}</p>
+            <p className="text-xs text-on-surface-variant mt-0.5">
+              Alokasi: <span className={`font-bold ${colorClass}`}>Rp {allocation.toLocaleString("id-ID")}/bulan</span>
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${badgeColor} hidden md:inline`}>{badge}</span>
+          <span className={`material-symbols-outlined text-on-surface-variant transition-transform ${expanded ? "rotate-180" : ""}`}>expand_more</span>
+        </div>
+      </button>
+
+      {/* Instrument Cards */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 pb-5 flex flex-col gap-3 border-t border-white/5 pt-4">
+              {instruments.map((inst, i) => (
+                <div key={i} className="bg-surface-container-high rounded-xl p-4 border border-white/5 hover:border-white/15 transition-colors">
+                  <div className="flex flex-col md:flex-row md:items-start gap-3">
+                    {/* Left: Nama & stats */}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap mb-2">
+                        <span className="font-bold text-white text-sm">{inst.name}</span>
+                        {inst.ticker && (
+                          <span className="font-mono text-[10px] bg-surface-container px-2 py-0.5 rounded border border-white/10 text-on-surface-variant">{inst.ticker}</span>
+                        )}
+                        {inst.risk && (
+                          <span className="text-[10px] text-on-surface-variant border border-white/10 px-2 py-0.5 rounded">{inst.risk}</span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-on-surface-variant mb-2">
+                        {inst.return_1y != null && <span>📈 Return 1 Thn: <strong className="text-primary">{inst.return_1y}% p.a.</strong></span>}
+                        {inst.kupon != null && <span>🏷️ Kupon: <strong className="text-primary">{inst.kupon}% p.a.</strong></span>}
+                        {inst.tenor && <span>⏳ Tenor: <strong className="text-white">{inst.tenor}</strong></span>}
+                        {inst.manajer && <span>🏛️ Manajer: <strong className="text-white">{inst.manajer}</strong></span>}
+                        {inst.nav_per_unit != null && <span>💰 NAV/unit: <strong className="text-white">Rp {inst.nav_per_unit.toLocaleString("id-ID")}</strong></span>}
+                        {inst.price != null && <span>💲 Harga: <strong className="text-white">{inst.currency === 'USD' ? '$' : 'Rp '}{inst.price.toLocaleString("id-ID")}</strong></span>}
+                        {inst.change_pct != null && (
+                          <span className={inst.change_pct >= 0 ? "text-primary" : "text-error"}>
+                            {inst.change_pct >= 0 ? "▲" : "▼"} {Math.abs(inst.change_pct).toFixed(2)}% hari ini
+                          </span>
+                        )}
+                        {inst.min_investasi != null && <span>📋 Min. Investasi: <strong className="text-white">Rp {inst.min_investasi.toLocaleString("id-ID")}</strong></span>}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Why Recommended */}
+                  <div className="flex gap-2 bg-surface-container/60 rounded-lg p-3 mt-1">
+                    <span className="material-symbols-outlined text-[16px] text-yellow-400 shrink-0 mt-0.5">lightbulb</span>
+                    <p className="text-xs text-on-surface-variant leading-relaxed">{inst.whyRecommended}</p>
+                  </div>
+                </div>
+              ))}
+              <p className="text-[10px] text-on-surface-variant/50 italic mt-1">
+                * Data instrumen di atas bersumber dari market data terkini. Rekomendasi bersifat edukatif, bukan saran investasi terdaftar OJK.
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -85,6 +241,8 @@ function MarketTickerBar({ instruments }: { instruments: Record<string, MarketIn
 export default function Beranda() {
   const ctx = useFinanceContext();
   const router = useRouter();
+  const { user } = useAuthContext();
+  const userId = user?.id || 'default';
 
   // Form section toggles
   const [openSections, setOpenSections] = useState<Record<number, boolean>>({ 1: true, 2: false, 3: false });
@@ -93,12 +251,12 @@ export default function Beranda() {
   // Loading
   const [isAnalyzingLocal, setIsAnalyzingLocal] = useState(false);
 
-  // Chat
+  // Chat — pakai userId agar sinkron dengan memory store
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<{ role: string; content: string }[]>([]);
   const [isChatTyping, setIsChatTyping] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const chatServiceRef = useRef(getChatService());
+  const chatServiceRef = useRef(getChatService(userId));
 
   // Market data
   const [instruments, setInstruments] = useState<Record<string, MarketInstrument[]>>({});
@@ -121,17 +279,94 @@ export default function Beranda() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages, isChatTyping]);
 
-  // Init chat on analysis complete
+  // Init chat on analysis complete — inject snapshot lengkap ke chatbot
   useEffect(() => {
     if (ctx.isAnalyzed && chatMessages.length === 0) {
       const svc = chatServiceRef.current;
       svc.reset();
+
+      // ─── INJECT PORTFOLIO SNAPSHOT ke ChatService ───
+      // Ini adalah fix utama: chatbot kini punya semua data analisis
+      const snapshot: PortfolioSnapshot = {
+        // Input
+        income: ctx.income,
+        expense: ctx.expense,
+        debt: ctx.debt,
+        savings: ctx.savings,
+        sideIncome: ctx.sideIncome,
+        existingInvestment: ctx.existingInvestment,
+        age: ctx.age,
+        employmentStatus: ctx.employmentStatus,
+        dependents: ctx.dependents,
+        investmentExperience: ctx.investmentExperience,
+        investmentHorizon: ctx.investmentHorizon,
+        goal: ctx.goal,
+        risk: ctx.risk,
+        drawdownReaction: ctx.drawdownReaction,
+        additionalNotes: ctx.additionalNotes,
+        // Agent outputs
+        riskProfile: ctx.riskProfileData,
+        wealthAllocation: ctx.wealthAllocationData,
+        stressTest: ctx.stressTestData,
+      };
+      svc.setPortfolioSnapshot(snapshot);
+
+      // Greeting yang informatif dan berbasis data nyata
+      const rp = ctx.riskProfileData;
+      const wa = ctx.wealthAllocationData;
+      const st = ctx.stressTestData;
+      const surplus = rp?.surplus || 0;
+      const rdpuPct = rp && wa && surplus > 0 ? Math.round((wa.allocations.rdpu / surplus) * 100) : 0;
+      const sbnPct  = rp && wa && surplus > 0 ? Math.round((wa.allocations.sbn  / surplus) * 100) : 0;
+      const idxPct  = rp && wa && surplus > 0 ? Math.round((wa.allocations.indexFund / surplus) * 100) : 0;
+      const cryPct  = rp && wa && surplus > 0 ? Math.round((wa.allocations.crypto / surplus) * 100) : 0;
+
       setChatMessages([{
         role: "ai",
-        content: `Halo! Saya Literacy Agent 🎓 — AI Financial Advisor Anda.\n\nSaya telah membaca seluruh memori konteks portofolio Anda dari 3 agent sebelumnya. Profil risiko Anda telah dikoreksi menjadi **${ctx.riskProfileData?.correctedRisk || 'N/A'}** dengan surplus bulanan **Rp ${(ctx.riskProfileData?.surplus || 0).toLocaleString('id-ID')}**.\n\nAda yang ingin Anda tanyakan tentang strategi ini? *(${svc.getRemainingMessages()}/${svc.getMaxMessages()} pesan tersisa)*`
+        content: [
+          `Halo! Saya **Literacy Agent** 🎓 — AI Financial Advisor Anda.`,
+          ``,
+          `Saya sudah membaca **seluruh hasil analisis pipeline** Anda:`,
+          `• Surplus bulanan: **Rp ${surplus.toLocaleString('id-ID')}**`,
+          `• Profil risiko terkoreksi: **${rp?.correctedRisk || 'N/A'}**`,
+          `• DTI Ratio: **${rp?.dtiRatio?.toFixed(1) || '0'}%** | Savings Rate: **${rp?.savingsRate?.toFixed(1) || '0'}%**`,
+          `• Alokasi: RDPU ${rdpuPct}%, SBN ${sbnPct}%, Index Fund ${idxPct}%, Kripto ${cryPct}%`,
+          `• Proyeksi 10 tahun: **Rp ${wa?.projections?.[9]?.toLocaleString('id-ID') || '0'}**`,
+          st ? `• Survival tanpa penghasilan: **${st.survivalMonths} bulan**` : '',
+          ``,
+          `Tanya apa pun tentang strategi, instrumen, atau angka di atas. *(${svc.getRemainingMessages()}/${svc.getMaxMessages()} pesan tersisa)*`,
+        ].filter(Boolean).join('\n'),
       }]);
     }
-  }, [ctx.isAnalyzed, chatMessages.length, ctx.riskProfileData]);
+  }, [ctx.isAnalyzed, chatMessages.length, ctx.riskProfileData, ctx.wealthAllocationData, ctx.stressTestData]);
+
+  // Re-sync snapshot jika user tidak reset tapi data berubah
+  useEffect(() => {
+    if (ctx.isAnalyzed && ctx.riskProfileData) {
+      const svc = chatServiceRef.current;
+      const snapshot: PortfolioSnapshot = {
+        income: ctx.income,
+        expense: ctx.expense,
+        debt: ctx.debt,
+        savings: ctx.savings,
+        sideIncome: ctx.sideIncome,
+        existingInvestment: ctx.existingInvestment,
+        age: ctx.age,
+        employmentStatus: ctx.employmentStatus,
+        dependents: ctx.dependents,
+        investmentExperience: ctx.investmentExperience,
+        investmentHorizon: ctx.investmentHorizon,
+        goal: ctx.goal,
+        risk: ctx.risk,
+        drawdownReaction: ctx.drawdownReaction,
+        additionalNotes: ctx.additionalNotes,
+        riskProfile: ctx.riskProfileData,
+        wealthAllocation: ctx.wealthAllocationData,
+        stressTest: ctx.stressTestData,
+      };
+      svc.setPortfolioSnapshot(snapshot);
+    }
+  }, [ctx.riskProfileData, ctx.wealthAllocationData, ctx.stressTestData]);
 
   const handleAnalyze = async () => {
     if (!ctx.income || !ctx.expense) {
@@ -141,6 +376,7 @@ export default function Beranda() {
     setIsAnalyzingLocal(true);
     await ctx.runAgentPipeline();
     setIsAnalyzingLocal(false);
+    // Reset chat dan snapshot lama sebelum greeting baru
     chatServiceRef.current.reset();
     setChatMessages([]);
   };
@@ -231,28 +467,28 @@ export default function Beranda() {
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pb-4 pt-2">
                       <div className="flex flex-col gap-1.5">
-                        <label className="font-label-md text-on-surface-variant text-sm">Pendapatan Bulanan (Rp) <span className="text-error">*</span></label>
-                        <input type="number" value={ctx.income} onChange={e => ctx.setIncome(e.target.value)} placeholder="Contoh: 8000000" className="w-full bg-surface-container border border-white/10 rounded-xl p-3.5 text-on-surface font-semibold focus:border-primary/50 outline-none transition-colors placeholder:text-on-surface-variant/30" />
+                        <label className="font-label-md text-on-surface-variant text-sm">Pendapatan Bulanan <span className="text-error">*</span></label>
+                        <RupiahInput id="input-income" value={ctx.income} onChange={ctx.setIncome} placeholder="Contoh: 8.000.000" />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <label className="font-label-md text-on-surface-variant text-sm">Pengeluaran Rutin (Rp) <span className="text-error">*</span></label>
-                        <input type="number" value={ctx.expense} onChange={e => ctx.setExpense(e.target.value)} placeholder="Contoh: 5000000" className="w-full bg-surface-container border border-white/10 rounded-xl p-3.5 text-on-surface font-semibold focus:border-primary/50 outline-none transition-colors placeholder:text-on-surface-variant/30" />
+                        <label className="font-label-md text-on-surface-variant text-sm">Pengeluaran Rutin <span className="text-error">*</span></label>
+                        <RupiahInput id="input-expense" value={ctx.expense} onChange={ctx.setExpense} placeholder="Contoh: 5.000.000" />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <label className="font-label-md text-on-surface-variant text-sm">Cicilan / Utang Bulanan (Rp)</label>
-                        <input type="number" value={ctx.debt} onChange={e => ctx.setDebt(e.target.value)} placeholder="0 jika tidak ada" className="w-full bg-surface-container border border-white/10 rounded-xl p-3.5 text-on-surface font-semibold focus:border-primary/50 outline-none transition-colors placeholder:text-on-surface-variant/30" />
+                        <label className="font-label-md text-on-surface-variant text-sm">Cicilan / Utang Bulanan</label>
+                        <RupiahInput id="input-debt" value={ctx.debt} onChange={ctx.setDebt} placeholder="0 jika tidak ada" />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <label className="font-label-md text-on-surface-variant text-sm">Total Tabungan Saat Ini (Rp)</label>
-                        <input type="number" value={ctx.savings} onChange={e => ctx.setSavings(e.target.value)} placeholder="Contoh: 15000000" className="w-full bg-surface-container border border-white/10 rounded-xl p-3.5 text-on-surface font-semibold focus:border-primary/50 outline-none transition-colors placeholder:text-on-surface-variant/30" />
+                        <label className="font-label-md text-on-surface-variant text-sm">Total Tabungan Saat Ini</label>
+                        <RupiahInput id="input-savings" value={ctx.savings} onChange={ctx.setSavings} placeholder="Contoh: 15.000.000" />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <label className="font-label-md text-on-surface-variant text-sm">Investasi yang Sudah Dimiliki (Rp)</label>
-                        <input type="number" value={ctx.existingInvestment} onChange={e => ctx.setExistingInvestment(e.target.value)} placeholder="Total aset investasi saat ini" className="w-full bg-surface-container border border-white/10 rounded-xl p-3.5 text-on-surface font-semibold focus:border-primary/50 outline-none transition-colors placeholder:text-on-surface-variant/30" />
+                        <label className="font-label-md text-on-surface-variant text-sm">Investasi yang Sudah Dimiliki</label>
+                        <RupiahInput id="input-existing-investment" value={ctx.existingInvestment} onChange={ctx.setExistingInvestment} placeholder="Total aset investasi saat ini" />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <label className="font-label-md text-on-surface-variant text-sm">Pendapatan Tambahan / Side Income (Rp)</label>
-                        <input type="number" value={ctx.sideIncome} onChange={e => ctx.setSideIncome(e.target.value)} placeholder="Freelance, usaha sampingan, dll" className="w-full bg-surface-container border border-white/10 rounded-xl p-3.5 text-on-surface font-semibold focus:border-primary/50 outline-none transition-colors placeholder:text-on-surface-variant/30" />
+                        <label className="font-label-md text-on-surface-variant text-sm">Pendapatan Tambahan / Side Income</label>
+                        <RupiahInput id="input-side-income" value={ctx.sideIncome} onChange={ctx.setSideIncome} placeholder="Freelance, usaha sampingan, dll" />
                       </div>
                     </div>
                   </motion.div>
@@ -627,18 +863,20 @@ export default function Beranda() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    {/* Summary Cards - 4 Kategori */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                       {[
-                        { label: "RDPU", icon: "shield", color: "secondary", val: ctx.wealthAllocationData?.allocations?.rdpu || 0 },
-                        { label: "Obligasi Negara", icon: "receipt_long", color: "blue-400", val: ctx.wealthAllocationData?.allocations?.sbn || 0 },
-                        { label: "Index Fund / ETF", icon: "trending_up", color: "primary", val: ctx.wealthAllocationData?.allocations?.indexFund || 0 },
-                        { label: "Saham / Kripto", icon: "rocket_launch", color: "purple-400", val: ctx.wealthAllocationData?.allocations?.crypto || 0 },
+                        { label: "RDPU", sublabel: "Reksa Dana Pasar Uang", icon: "shield", color: "secondary", val: ctx.wealthAllocationData?.allocations?.rdpu || 0, key: "rdpu" as const },
+                        { label: "Obligasi Negara", sublabel: "SBN / ORI / SR / SBR", icon: "receipt_long", color: "blue-400", val: ctx.wealthAllocationData?.allocations?.sbn || 0, key: "sbn" as const },
+                        { label: "Index Fund / ETF", sublabel: "Reksa Dana Indeks / ETF", icon: "trending_up", color: "primary", val: ctx.wealthAllocationData?.allocations?.indexFund || 0, key: "indexFund" as const },
+                        { label: "Saham / Kripto", sublabel: "Aset berisiko tinggi", icon: "rocket_launch", color: "purple-400", val: ctx.wealthAllocationData?.allocations?.crypto || 0, key: "crypto" as const },
                       ].map((item) => (
                         <div key={item.label} className="bg-surface-container-high border border-white/5 rounded-xl p-5 hover:border-primary/30 transition-colors">
                           <div className="flex justify-between items-center mb-3">
                             <div className={`w-8 h-8 rounded-full bg-${item.color}/10 flex items-center justify-center text-${item.color}`}><span className="material-symbols-outlined text-sm">{item.icon}</span></div>
                             <span className={`text-${item.color} font-black text-lg`}>{surplus > 0 ? Math.round((item.val / surplus) * 100) : 0}%</span>
                           </div>
+                          <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider mb-0.5">{item.sublabel}</p>
                           <h5 className="font-bold text-white text-sm mb-1">{item.label}</h5>
                           <p className="text-lg font-mono text-white">Rp {item.val.toLocaleString('id-ID')}</p>
                         </div>
@@ -646,14 +884,85 @@ export default function Beranda() {
                     </div>
 
                     {/* AI Message */}
-                    <div className="bg-surface-container border-l-4 border-l-blue-400 p-5 rounded-r-xl rounded-l-sm mb-4">
+                    <div className="bg-surface-container border-l-4 border-l-blue-400 p-5 rounded-r-xl rounded-l-sm mb-6">
                       <h5 className="font-bold text-blue-400 mb-2 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[18px]">public</span> Pesan AI (Wealth Manager)
+                        <span className="material-symbols-outlined text-[18px]">auto_awesome</span> Analisis AI — Wealth Manager
                       </h5>
                       <p className="text-sm text-on-surface-variant leading-relaxed whitespace-pre-wrap">
                         {ctx.wealthAllocationData?.message || "Data alokasi tidak tersedia."}
                       </p>
                     </div>
+
+                    {/* ─── BREAKDOWN INSTRUMEN SPESIFIK ─── */}
+                    {ctx.wealthAllocationData?.recommendedInstruments && (
+                      <div className="flex flex-col gap-4 mb-6">
+                        <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+                          <span className="material-symbols-outlined text-primary text-[20px]">manage_search</span>
+                          <h5 className="font-bold text-white text-base">Rekomendasi Instrumen Spesifik</h5>
+                          <span className="text-[10px] text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full border border-white/10 font-bold uppercase tracking-wider">Live Data</span>
+                        </div>
+
+                        {/* RDPU */}
+                        {(ctx.wealthAllocationData.allocations.rdpu > 0) && ctx.wealthAllocationData.recommendedInstruments.rdpu.length > 0 && (
+                          <InstrumentBreakdownSection
+                            title="Reksa Dana Pasar Uang (RDPU)"
+                            icon="shield"
+                            colorClass="text-secondary"
+                            borderClass="border-secondary/30"
+                            bgClass="bg-secondary/5"
+                            allocation={ctx.wealthAllocationData.allocations.rdpu}
+                            instruments={ctx.wealthAllocationData.recommendedInstruments.rdpu}
+                            badge="Risiko Sangat Rendah"
+                            badgeColor="bg-secondary/20 text-secondary border-secondary/30"
+                          />
+                        )}
+
+                        {/* SBN */}
+                        {(ctx.wealthAllocationData.allocations.sbn > 0) && ctx.wealthAllocationData.recommendedInstruments.sbn.length > 0 && (
+                          <InstrumentBreakdownSection
+                            title="Obligasi Negara (SBN / ORI / SR)"
+                            icon="receipt_long"
+                            colorClass="text-blue-400"
+                            borderClass="border-blue-400/30"
+                            bgClass="bg-blue-500/5"
+                            allocation={ctx.wealthAllocationData.allocations.sbn}
+                            instruments={ctx.wealthAllocationData.recommendedInstruments.sbn}
+                            badge="Dijamin Negara"
+                            badgeColor="bg-blue-500/20 text-blue-400 border-blue-400/30"
+                          />
+                        )}
+
+                        {/* Index Fund */}
+                        {(ctx.wealthAllocationData.allocations.indexFund > 0) && ctx.wealthAllocationData.recommendedInstruments.indexFund.length > 0 && (
+                          <InstrumentBreakdownSection
+                            title="Reksa Dana Indeks / ETF"
+                            icon="trending_up"
+                            colorClass="text-primary"
+                            borderClass="border-primary/30"
+                            bgClass="bg-primary/5"
+                            allocation={ctx.wealthAllocationData.allocations.indexFund}
+                            instruments={ctx.wealthAllocationData.recommendedInstruments.indexFund}
+                            badge="Pertumbuhan Jangka Panjang"
+                            badgeColor="bg-primary/20 text-primary border-primary/30"
+                          />
+                        )}
+
+                        {/* Crypto/Saham */}
+                        {(ctx.wealthAllocationData.allocations.crypto > 0) && ctx.wealthAllocationData.recommendedInstruments.crypto.length > 0 && (
+                          <InstrumentBreakdownSection
+                            title="Aset Berisiko Tinggi (Kripto / Saham)"
+                            icon="rocket_launch"
+                            colorClass="text-purple-400"
+                            borderClass="border-purple-400/30"
+                            bgClass="bg-purple-500/5"
+                            allocation={ctx.wealthAllocationData.allocations.crypto}
+                            instruments={ctx.wealthAllocationData.recommendedInstruments.crypto}
+                            badge="Risiko Sangat Tinggi"
+                            badgeColor="bg-purple-500/20 text-purple-400 border-purple-400/30"
+                          />
+                        )}
+                      </div>
+                    )}
 
                     {/* Dynamic Instrument List */}
                     <div className="mt-6 bg-surface-container/50 border border-white/5 rounded-xl p-5">
