@@ -4,9 +4,10 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    let apiUrl = (process.env.LLM_API_URL || 'https://ws-ra70moluyn0nqqsg.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions').trim();
+    let apiUrl = (process.env.LLM_API_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1').trim();
+    apiUrl = apiUrl.replace(/[\s.,;/'"\\]+$/, ''); // clean up any accidental trailing characters
     if (!apiUrl.endsWith('/chat/completions')) {
-      apiUrl = apiUrl.replace(/\/$/, '') + '/chat/completions';
+      apiUrl = apiUrl + '/chat/completions';
     }
     const apiKey = (process.env.LLM_API_KEY || '').trim();
 
