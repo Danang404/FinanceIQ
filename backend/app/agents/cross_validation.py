@@ -40,7 +40,7 @@ def run_cross_validation(state: SessionState, user_input: str) -> SessionState:
     }}
     """
     try:
-        response = call_llm([{"role": "system", "content": system_prompt}], model="Qwen3.5-Plus")
+        response = call_llm([{"role": "system", "content": system_prompt}], model="qwen3.5-plus")
         if response.startswith("```json"):
             response = response.strip("`").replace("json\n", "")
             

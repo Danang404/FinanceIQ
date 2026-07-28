@@ -43,7 +43,7 @@ def run_wealth_manager(state: SessionState, user_input: str) -> SessionState:
     """
     
     try:
-        response = call_llm([{"role": "system", "content": system_prompt}], model="Qwen3-Max")
+        response = call_llm([{"role": "system", "content": system_prompt}], model="qwen3.7-max")
         if response.startswith("```json"):
             response = response.strip("`").replace("json\n", "")
             

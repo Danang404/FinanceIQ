@@ -3,14 +3,14 @@ const API_URL = "/api/llm";
 const API_KEY = ""; // Key sekarang disimpan di server (.env LLM_API_KEY)
 
 const MODELS = [
-  "Qwen3.7-Flash",
-  "Qwen3.6-Plus",
-  "Qwen3.5-Flash",
-  "Qwen3.5-Plus",
-  "DeepSeek-V4-Flash",
-  "DeepSeek-V4-Pro",
-  "Qwen3-Max",
-  "Qwen3.6-Flash"
+  "qwen3.7-flash",
+  "qwen3.6-plus",
+  "qwen3.5-flash",
+  "qwen3.5-plus",
+  "deepseek-v4-flash",
+  "deepseek-v4-pro",
+  "qwen3.7-max",
+  "qwen3.6-flash"
 ];
 
 function getRandomModel(): string {
