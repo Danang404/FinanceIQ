@@ -20,10 +20,15 @@ app = FastAPI(
     version="3.0",
 )
 
+import os
+
+# Ambil FRONTEND_URL dari env var (misal Vercel), jika tidak ada, default ke localhost atau allow all
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
 # CORS — Allow frontend to call backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=[FRONTEND_URL, "http://localhost:3001"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

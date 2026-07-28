@@ -37,7 +37,7 @@ def run_investment_strategist(state: SessionState, user_input: str) -> SessionSt
     }}
     """
     try:
-        response = call_llm([{"role": "system", "content": system_prompt}], model="gemini-1.5-pro")
+        response = call_llm([{"role": "system", "content": system_prompt}], model="qwen-plus")
         if response.startswith("```json"):
             response = response.strip("`").replace("json\n", "")
             

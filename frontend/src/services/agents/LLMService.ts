@@ -1,10 +1,8 @@
-const API_URL = "http://localhost:20128/v1/chat/completions";
-const API_KEY = "sk-d87a7e5a911c8a06-66bfmx-94b840ec"; // 9Router API Key
+const API_URL = process.env.NEXT_PUBLIC_LLM_API_URL || "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
+const API_KEY = process.env.NEXT_PUBLIC_LLM_API_KEY || "dummy_key"; 
 
 const MODELS = [
-  "kr/claude-sonnet-4.5",
-  "kr/claude-haiku-4.5",
-  "kr/deepseek-3.2"
+  "qwen-plus"
 ];
 
 function getRandomModel(): string {
