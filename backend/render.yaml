@@ -10,6 +10,6 @@ services:
       - key: FRONTEND_URL
         value: "https://your-vercel-app-url.vercel.app" # Ganti ini nanti di dashboard
       - key: NINEROUTER_URL
-        value: "https://dashscope.aliyuncs.com/compatible-mode"
+        value: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
       - key: NINEROUTER_KEY
         value: "YOUR_QWEN_API_KEY_HERE"

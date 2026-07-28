@@ -4,7 +4,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    const apiUrl = process.env.LLM_API_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+    const apiUrl = process.env.LLM_API_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions';
     const apiKey = process.env.LLM_API_KEY || '';
 
     const response = await fetch(apiUrl, {
