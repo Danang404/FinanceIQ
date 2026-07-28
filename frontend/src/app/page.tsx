@@ -7,7 +7,7 @@ import { useState, useEffect, useRef } from "react";
 // --- Framer Motion Variants ---
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 50 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.8, type: "spring", bounce: 0.2 } }
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, type: "spring" as const, bounce: 0.2 } }
 };
 
 const staggerContainer: Variants = {
