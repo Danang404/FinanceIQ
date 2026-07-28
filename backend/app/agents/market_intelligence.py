@@ -25,7 +25,7 @@ def run_market_intelligence(state: SessionState, user_input: str) -> SessionStat
     }}
     """
     try:
-        response = call_llm([{"role": "system", "content": system_prompt}], model="qwen-plus")
+        response = call_llm([{"role": "system", "content": system_prompt}], model="DeepSeek-V4-Flash")
         if response.startswith("```json"):
             response = response.strip("`").replace("json\n", "")
             

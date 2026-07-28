@@ -2,7 +2,14 @@ const API_URL = process.env.NEXT_PUBLIC_LLM_API_URL || "https://dashscope.aliyun
 const API_KEY = process.env.NEXT_PUBLIC_LLM_API_KEY || "dummy_key"; 
 
 const MODELS = [
-  "qwen-plus"
+  "Qwen3.7-Flash",
+  "Qwen3.6-Plus",
+  "Qwen3.5-Flash",
+  "Qwen3.5-Plus",
+  "DeepSeek-V4-Flash",
+  "DeepSeek-V4-Pro",
+  "Qwen3-Max",
+  "Qwen3.6-Flash"
 ];
 
 function getRandomModel(): string {

@@ -37,7 +37,7 @@ def run_investment_strategist(state: SessionState, user_input: str) -> SessionSt
     }}
     """
     try:
-        response = call_llm([{"role": "system", "content": system_prompt}], model="qwen-plus")
+        response = call_llm([{"role": "system", "content": system_prompt}], model="DeepSeek-V4-Pro")
         if response.startswith("```json"):
             response = response.strip("`").replace("json\n", "")
             

@@ -36,7 +36,7 @@ def run_communication_education(state: SessionState, user_input: str) -> Session
     }}
     """
     try:
-        response = call_llm([{"role": "system", "content": system_prompt}], model="qwen-plus")
+        response = call_llm([{"role": "system", "content": system_prompt}], model="Qwen3.6-Plus")
         if response.startswith("```json"):
             response = response.strip("`").replace("json\n", "")
             
