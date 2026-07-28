@@ -182,9 +182,9 @@ export default function RencanaPage() {
                 <h4 className="font-bold text-primary-fixed text-xl mb-3 flex items-center gap-2">
                    Pesan AI Wealth Manager
                 </h4>
-                <p className="text-sm text-primary-fixed-dim leading-relaxed">
-                  Perhatikan grafik di atas yang melengkung ke atas (J-Curve). Inilah cara orang kaya melipatgandakan hartanya tanpa harus bekerja lebih keras. Pada Tahun ke-5 ke atas, keuntungan investasi Anda akan ikut menghasilkan uang lagi secara otomatis. Tantangan terbesar Anda bukanlah memilih saham terbaik, melainkan konsistensi berinvestasi rutin Rp {surplus.toLocaleString('id-ID')} setiap bulan selama 120 bulan ke depan tanpa henti.
-                </p>
+                <div className="text-sm text-primary-fixed-dim leading-relaxed whitespace-pre-line">
+                  {wealthAllocationData?.message || `Perhatikan grafik di atas yang melengkung ke atas (J-Curve). Inilah cara orang kaya melipatgandakan hartanya tanpa harus bekerja lebih keras. Pada Tahun ke-5 ke atas, keuntungan investasi Anda akan ikut menghasilkan uang lagi secara otomatis. Tantangan terbesar Anda bukanlah memilih saham terbaik, melainkan konsistensi berinvestasi rutin Rp ${surplus.toLocaleString('id-ID')} setiap bulan selama 120 bulan ke depan tanpa henti.`}
+                </div>
               </div>
             </div>
           </div>
