@@ -9,7 +9,7 @@ const MODELS = [
   "qwen3.5-plus",
   "deepseek-v4-flash",
   "deepseek-v4-pro",
-  "qwen3.7-max",
+  "qwen3-max",
   "qwen3.6-flash"
 ];
 
