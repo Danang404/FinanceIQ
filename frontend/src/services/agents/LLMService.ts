@@ -1,5 +1,6 @@
-const API_URL = process.env.NEXT_PUBLIC_LLM_API_URL || "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
-const API_KEY = process.env.NEXT_PUBLIC_LLM_API_KEY || "dummy_key"; 
+// Panggil lewat Next.js API Route proxy (server-side) — bebas CORS, API key aman
+const API_URL = "/api/llm";
+const API_KEY = ""; // Key sekarang disimpan di server (.env LLM_API_KEY)
 
 const MODELS = [
   "Qwen3.7-Flash",
