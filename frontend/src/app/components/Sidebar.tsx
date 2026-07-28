@@ -2,9 +2,11 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuthContext } from '../context/AuthContext';
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { user, logout } = useAuthContext();
   
   if (pathname === '/') return null;
 
@@ -12,7 +14,7 @@ export default function Sidebar() {
     { name: 'Beranda', path: '/beranda', icon: 'chat_bubble', filled: true },
     { name: 'Analisa', path: '/analisa', icon: 'insights', filled: false },
     { name: 'Rencana', path: '/rencana', icon: 'map', filled: false },
-    { name: 'Riwayat', path: '#', icon: 'history', filled: false },
+    { name: 'Riwayat', path: '/riwayat', icon: 'history', filled: false },
   ];
 
   return (
@@ -26,7 +28,7 @@ export default function Sidebar() {
               <img alt="User Profile Avatar" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5s2OeK-uizY-AsTB0VrpsCO9O4CISzbE2uIgFlq04seFdFhc_ao-NUU7c9AwVaISyFgK2vtWKMCHgSejKXGP-xfEeJ7k2m7O8REEToarC2D9g7m_FsXCo6xNRP_H9ypmyujKwUQzCplmFmGpGcNj8wSw8N_YkjtJPN1Qta9s5EhuwGtc_uyQ3zWN1_wic6q3UOh8c-WW40gYaEhjkCciKYbAaTOy6rftSyqvpth4euyjzBpU4sX_FTlk_QEqT-i2rUje449Dtuj8"/>
             </div>
             <div>
-              <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface text-[16px]">Halo, Achiever</h2>
+              <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface text-[16px] truncate max-w-[150px]">Halo, {user?.name?.split(' ')[0] || 'Achiever'}</h2>
               <p className="font-body-sm text-body-sm text-primary/80">Status: Aktif Membangun</p>
             </div>
           </div>
@@ -52,14 +54,14 @@ export default function Sidebar() {
             Upgrade ke Pro
           </button>
           <div className="space-y-1">
-            <a className="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-white/5 rounded-xl duration-200 ease-in-out cursor-pointer">
+            <button onClick={() => alert("Pusat Bantuan sedang dalam pengembangan.")} className="w-full flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-white/5 rounded-xl duration-200 ease-in-out cursor-pointer">
               <span className="material-symbols-outlined text-[20px]">help</span>
               <span className="font-body-sm text-body-sm">Bantuan</span>
-            </a>
-            <a className="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-white/5 rounded-xl duration-200 ease-in-out cursor-pointer">
+            </button>
+            <button onClick={logout} className="w-full flex items-center gap-3 px-4 py-2 text-error hover:text-error hover:bg-error/10 rounded-xl duration-200 ease-in-out cursor-pointer">
               <span className="material-symbols-outlined text-[20px]">logout</span>
               <span className="font-body-sm text-body-sm">Keluar</span>
-            </a>
+            </button>
           </div>
         </div>
       </nav>

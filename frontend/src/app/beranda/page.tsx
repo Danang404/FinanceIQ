@@ -435,6 +435,45 @@ export default function Beranda() {
         {/* LIVE MARKET TICKER */}
         <MarketTickerBar instruments={instruments} />
 
+        {!ctx.isAnalyzed && !isAnalyzingLocal && (
+          <div className="bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 rounded-3xl p-6 md:p-8 mb-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+            <div className="relative z-10">
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-1">Selamat Datang, {user?.name || 'Investor'}! 👋</h2>
+              <p className="text-on-surface-variant mb-6 text-sm md:text-base">{user?.email}</p>
+              
+              <h3 className="font-bold text-white text-sm md:text-base mb-4 flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-[20px]">memory</span>
+                Sistem Multi-Agent FinanceIQ:
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-surface-container/60 border border-white/5 rounded-2xl p-5 hover:bg-surface-container transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center mb-3">
+                    <span className="material-symbols-outlined">health_and_safety</span>
+                  </div>
+                  <h4 className="font-bold text-white text-sm mb-2">1. Risk Profiler</h4>
+                  <p className="text-xs text-on-surface-variant leading-relaxed">Audit kesehatan rasio keuangan bulanan dan toleransi risiko behavior Anda.</p>
+                </div>
+                <div className="bg-surface-container/60 border border-white/5 rounded-2xl p-5 hover:bg-surface-container transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center mb-3">
+                    <span className="material-symbols-outlined">pie_chart</span>
+                  </div>
+                  <h4 className="font-bold text-white text-sm mb-2">2. Wealth Manager</h4>
+                  <p className="text-xs text-on-surface-variant leading-relaxed">Merancang strategi alokasi aset yang optimal beserta proyeksi bunga berbunga.</p>
+                </div>
+                <div className="bg-surface-container/60 border border-white/5 rounded-2xl p-5 hover:bg-surface-container transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center mb-3">
+                    <span className="material-symbols-outlined">thunderstorm</span>
+                  </div>
+                  <h4 className="font-bold text-white text-sm mb-2">3. Market Analyst</h4>
+                  <p className="text-xs text-on-surface-variant leading-relaxed">Menguji ketahanan pondasi finansial Anda terhadap skenario krisis dan resesi.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <AnimatePresence mode="wait">
           
           {/* ============================================================ */}
