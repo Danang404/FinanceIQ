@@ -7,13 +7,13 @@ import { useState, useEffect, useRef } from "react";
 // --- Framer Motion Variants ---
 const fadeUp = {
   hidden: { opacity: 0, y: 50 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.8, type: "spring", bounce: 0.2 } }
-};
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, type: "spring" as const, bounce: 0.2 } }
+} as const;
 
 const staggerContainer = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.2 } }
-};
+} as const;
 
 // --- Custom Glow Card Component ---
 function GlowCard({ children, title, icon, color }: { children: React.ReactNode, title: string, icon: string, color: string }) {
@@ -29,7 +29,10 @@ function GlowCard({ children, title, icon, color }: { children: React.ReactNode,
 
   return (
     <motion.div 
-      variants={fadeUp}
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, type: "spring", bounce: 0.2 }}
+      viewport={{ once: true }}
       ref={divRef}
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setOpacity(1)}

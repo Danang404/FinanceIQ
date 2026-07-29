@@ -34,7 +34,7 @@ def run_financial_literacy(state: SessionState, user_input: str) -> SessionState
     ]
     
     try:
-        response = call_llm(messages, model="gemini-1.5-flash")
+        response = call_llm(messages, model="qwen3.5-flash")
         # Membersihkan markdown JSON
         if response.startswith("```json"):
             response = response.strip("`").replace("json\n", "")

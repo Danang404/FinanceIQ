@@ -6,10 +6,10 @@ import { callAgentLLM } from './LLMService';
  */
 export class RiskProfilerAgent {
   public async analyzeRisk(data: RawFinancialData): Promise<RiskProfileResult> {
-    const a1SystemPrompt = `Kamu adalah pakar aktuaria dan financial risk profiler PROFESIONAL. 
-Tugasmu menganalisis profil risiko user secara KOMPREHENSIF berdasarkan data keuangan DAN profil demografis mereka.
+    const a1SystemPrompt = `Kamu adalah perencana keuangan (Financial Advisor) yang SANGAT EMPATIK, RAMAH, dan BERSAHABAT. 
+Tugasmu menganalisis profil risiko user secara komprehensif, namun sampaikan hasilnya dengan bahasa manusia sehari-hari yang MUDAH DIPAHAMI oleh orang awam (hindari istilah teknis yang kaku dan robotik).
 
-GOAL: Tentukan profil risiko yang PALING AMAN dan REALISTIS untuk user ini.
+GOAL: Tentukan profil risiko yang PALING AMAN dan REALISTIS untuk user ini, lalu berikan kesimpulan yang suportif.
 
 CONSTRAINTS:
 - JANGAN rekomendasikan Agresif jika DTI > 30% atau Emergency Fund < 100%
@@ -30,7 +30,11 @@ Kembalikan respon HANYA dalam format JSON valid dengan skema berikut:
   "explanation": string
 }
 
-PENTING untuk explanation: Tulis 2-3 paragraf MENDALAM yang menyebutkan data spesifik user (usia, tanggungan, pengalaman, behavioral risk) dan mengapa kamu mengoreksi/mempertahankan profil risikonya.`;
+PENTING untuk explanation: 
+Tulis 2-3 paragraf yang HANGAT, SUPORTIF, dan GAMPANG DIMENGERTI (layaknya mengobrol dengan teman). 
+Beri apresiasi atas kerja keras mereka mengelola uang. Jangan gunakan jargon seperti "secara aktuaria" atau "aturan restriktif".
+Sebutkan poin penting (surplus, dana darurat, DTI) dengan santai. 
+Beri semangat dan jelaskan secara sederhana kenapa profil risikonya kamu tetapkan seperti itu (misal: "Karena dana daruratmu belum penuh, kita main aman dulu ya di Konservatif..."). JANGAN MENGHAKIMI atau menakut-nakuti!`;
 
     const userDataSummary = {
       // Financial
@@ -99,11 +103,11 @@ PENTING untuk explanation: Tulis 2-3 paragraf MENDALAM yang menyebutkan data spe
       : data.investmentExperience === 'kurang_1_tahun' ? 'baru mulai berinvestasi (<1 tahun)'
         : `memiliki pengalaman investasi ${data.investmentExperience?.replace(/_/g, ' ')}`;
 
-    const explanation = `Berdasarkan analisis komprehensif, Anda ${expLabel} dengan usia ${age} tahun dan ${dependents} tanggungan. DTI Ratio Anda berada di ${dtiRatio.toFixed(1)}% ${dtiRatio > 30 ? '(BAHAYA - melebihi batas aman 30%)' : '(dalam batas aman)'}. Dana darurat Anda baru terpenuhi ${emergencyProgress.toFixed(1)}% dari target ${emergencyMonths} bulan pengeluaran.
+    const explanation = `Halo! Luar biasa sekali Anda sudah mulai merencanakan keuangan di usia ${age} tahun. Dari analisis saya, rasio utang (DTI) Anda ada di angka ${dtiRatio.toFixed(1)}% — ${dtiRatio > 30 ? 'ini agak tinggi ya, yuk pelan-pelan kita turunkan' : 'ini angka yang sangat sehat, pertahankan ya!'}. Untuk dana darurat, saat ini sudah terkumpul ${emergencyProgress.toFixed(1)}% dari target ideal kita yaitu ${emergencyMonths} bulan pengeluaran.
 
-Status pekerjaan "${data.employmentStatus || 'tidak diketahui'}" memengaruhi kebutuhan dana darurat Anda — kami memperkirakan Anda membutuhkan ${emergencyMonths} bulan pengeluaran sebagai bantalan. Reaksi Anda terhadap penurunan portofolio 20% ("${data.drawdownReaction || 'tahan'}") menunjukkan profil behavioral risk yang ${data.drawdownReaction === 'jual_semua' ? 'cenderung panik' : data.drawdownReaction === 'beli_lebih' ? 'agresif dan percaya diri' : 'cukup stabil'}.
+Mengingat status Anda sebagai ${data.employmentStatus || 'karyawan'} dan memiliki ${dependents} tanggungan, fokus utama kita sekarang adalah memastikan "bantalan" keuangan Anda (dana darurat) benar-benar kokoh dulu sebelum melangkah lebih jauh. Apalagi Anda ${expLabel}, jadi kita bertumbuh pelan tapi pasti saja.
 
-Oleh karena itu, profil risiko Anda ${correctedRisk === data.risk.toUpperCase() ? 'dipertahankan' : `dikoreksi dari "${data.risk}" menjadi "${correctedRisk}"`} demi keamanan finansial jangka panjang Anda.`;
+Oleh karena itu, profil risiko Anda yang sebelumnya "${data.risk}" ${correctedRisk === data.risk.toUpperCase() ? 'sudah sangat pas dan saya pertahankan' : `saya sarankan kita sesuaikan sedikit menjadi "${correctedRisk}"`} ya. Tujuannya sederhana: supaya pikiran Anda tetap tenang dan uang Anda tetap aman meski pasar sedang naik turun. Tetap semangat, langkah kecil hari ini adalah awal dari kekayaan Anda di masa depan!`;
 
     return {
       surplus,

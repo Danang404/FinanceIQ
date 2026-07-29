@@ -1,10 +1,16 @@
-const API_URL = "http://localhost:20128/v1/chat/completions";
-const API_KEY = "sk-d87a7e5a911c8a06-66bfmx-94b840ec"; // 9Router API Key
+// Panggil lewat Next.js API Route proxy (server-side) — bebas CORS, API key aman
+const API_URL = "/api/llm";
+const API_KEY = ""; // Key sekarang disimpan di server (.env LLM_API_KEY)
 
 const MODELS = [
-  "kr/claude-sonnet-4.5",
-  "kr/claude-haiku-4.5",
-  "kr/deepseek-3.2"
+  "qwen3.7-flash",
+  "qwen3.6-plus",
+  "qwen3.5-flash",
+  "qwen3.5-plus",
+  "deepseek-v4-flash",
+  "deepseek-v4-pro",
+  "qwen3-max",
+  "qwen3.6-flash"
 ];
 
 function getRandomModel(): string {

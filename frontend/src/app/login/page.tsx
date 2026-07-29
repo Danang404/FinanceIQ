@@ -1,22 +1,39 @@
 "use client";
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthContext } from '../context/AuthContext';
 import Link from 'next/link';
 
 export default function LoginPage() {
-  const { login } = useAuthContext();
+  const { login, register } = useAuthContext();
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
-      // Name is optional if logging in, we just use a default if empty
-      login(name || 'Pengguna', email);
+    setErrorMsg('');
+    try {
+      if (isLogin) {
+        login(email, password);
+      } else {
+        if (!name) {
+          setErrorMsg("Nama Panggilan harus diisi");
+          return;
+        }
+        register(name, email, password);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || "Terjadi kesalahan autentikasi.");
     }
+  };
+
+  const toggleMode = () => {
+    setIsLogin(!isLogin);
+    setErrorMsg('');
   };
 
   return (
@@ -49,6 +66,20 @@ export default function LoginPage() {
         <div className="bg-surface-dim border border-white/10 rounded-3xl p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-primary"></div>
           
+          <AnimatePresence>
+            {errorMsg && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="bg-error/10 border border-error/20 text-error px-4 py-3 rounded-xl mb-6 text-sm flex items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-[18px]">error</span>
+                {errorMsg}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
               <div className="space-y-2">
@@ -82,13 +113,14 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Mock Password field just for aesthetics (not actually validated) */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300 ml-1">Password</label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-[20px]">lock</span>
                 <input 
                   type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                   className="w-full bg-surface border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-gray-600"
                   placeholder="••••••••"
@@ -98,7 +130,7 @@ export default function LoginPage() {
 
             <button 
               type="submit"
-              className="w-full py-3.5 rounded-xl bg-white text-black font-semibold mt-4 hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 group"
+              className="w-full py-3.5 rounded-xl bg-white text-black font-semibold mt-4 hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 group shadow-lg"
             >
               {isLogin ? 'Masuk ke Dashboard' : 'Daftar Sekarang'}
               <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
@@ -110,7 +142,7 @@ export default function LoginPage() {
               {isLogin ? 'Belum punya akun?' : 'Sudah punya akun?'}
               <button 
                 type="button"
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={toggleMode}
                 className="ml-2 text-primary hover:text-white transition-colors font-medium"
               >
                 {isLogin ? 'Daftar di sini' : 'Masuk di sini'}

@@ -30,7 +30,7 @@ def run_risk_profiler(state: SessionState, user_input: str) -> SessionState:
     """
     
     try:
-        response = call_llm([{"role": "system", "content": system_prompt}], model="claude-3-haiku")
+        response = call_llm([{"role": "system", "content": system_prompt}], model="qwen3.7-flash")
         if response.startswith("```json"):
             response = response.strip("`").replace("json\n", "")
             

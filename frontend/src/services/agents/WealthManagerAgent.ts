@@ -138,18 +138,25 @@ export class WealthManagerAgent {
       // Gunakan fallback jika gagal
     }
 
-    const a2SystemPrompt = `Kamu adalah pakar Wealth Management. Diberikan input profil risiko JSON.
+    const a2SystemPrompt = `Kamu adalah Penasihat Investasi (Wealth Manager) andalan user yang RAMAH, TERSTRUKTUR, dan ACTION-ORIENTED. Diberikan input profil risiko JSON.
 Tugasmu adalah memberikan alokasi investasi bulanan (RDPU, SBN, IndexFund, Crypto) dan proyeksi pertumbuhan uangnya selama 10 tahun (10 elemen array).
+
 Kembalikan HANYA format JSON valid tanpa teks lain:
 {
   "yearlyInvestment": number, // surplus bulanan * 12
-  "allocations": { "rdpu": number, "sbn": number, "indexFund": number, "crypto": number }, // alokasi dalam rupiah berdasarkan persentase
-  "projections": number[], // array 10 angka, proyeksi akumulasi per tahun selama 10 tahun
+  "allocations": { "rdpu": number, "sbn": number, "indexFund": number, "crypto": number }, // alokasi dalam rupiah
+  "projections": number[], // array 10 angka
   "maxProjection": number,
   "totalOriginalCapital": number,
   "pureInterest": number,
-  "message": string // Pesan profesional mengenai alokasi tersebut
-}`;
+  "message": string
+}
+
+PENTING untuk "message": 
+Tulis "Plan Aksi" yang TERSTRUKTUR, STEP-BY-STEP, MUDAH DIPAHAMI AWAM, dan SANGAT PRAKTIS (Bisa langsung dipraktekkan hari ini).
+Gunakan list bullet/angka, emoji secukupnya, dan bahasa yang ramah & menyemangati layaknya mentor keuangan pribadi. 
+JANGAN gunakan jargon rumit. Buat mereka EXCITED untuk mulai berinvestasi! 
+Contoh: "1. 🛡️ Fokus kumpulkan Dana Darurat dulu ya!", "2. 📈 Mulai cicil Reksa Dana tiap gajian", dll.`;
     const a2UserPrompt = JSON.stringify(riskProfile);
 
     let baseResult: Omit<WealthAllocationResult, 'recommendedInstruments'> | null = null;
@@ -195,8 +202,8 @@ Kembalikan HANYA format JSON valid tanpa teks lain:
 
       const biRate = 6.0; // BI Rate referensi
       const message = surplus > 0
-        ? `Profil Anda (${riskProfile.correctedRisk}) menunjukkan kapasitas investasi Rp ${surplus.toLocaleString('id-ID')}/bulan. Alokasi dirancang dengan mempertimbangkan BI Rate saat ini ${biRate}% — RDPU & SBN menjadi basis stabil, sedangkan Index Fund menangkap pertumbuhan jangka panjang pasar. Proyeksi selama 10 tahun mengasumsikan rata-rata return 7% p.a. (konservatif). Lakukan rebalancing setiap 12 bulan.`
-        : `Saat ini Anda tidak memiliki surplus untuk diinvestasikan. Prioritaskan efisiensi pengeluaran terlebih dahulu.`;
+        ? `Halo! Ini dia Plan Aksi Investasi Anda bulan ini agar kekayaan Anda bertumbuh maksimal:\n\n1. 🛡️ **Fokus Dana Darurat**: Pastikan Anda rutin menyisihkan sebagian surplus ke RDPU atau SBN yang super aman.\n2. 📈 **Mulai Investasi Jangka Panjang**: Gunakan sisa surplus untuk mencicil Reksa Dana Indeks tiap bulan sehabis gajian. Jangan pusingkan harga naik turun, yang penting konsisten (DCA).\n3. 🎯 **Review Rutin**: Lakukan pengecekan setahun sekali.\n\nJika Anda konsisten dengan plan di atas, dalam 10 tahun proyeksi kekayaan Anda bisa mencapai hasil yang luar biasa. Semangat mulai berinvestasi hari ini!`
+        : `Halo! Saat ini prioritas utama kita adalah menyehatkan arus kas (cashflow) Anda dulu ya.\n\n1. 📝 **Catat Pengeluaran**: Yuk mulai perhatikan kemana saja uang Anda pergi bulan ini.\n2. ✂️ **Pangkas yang Tidak Perlu**: Cari pengeluaran yang bisa ditunda atau dihilangkan agar bulan depan kita punya surplus (uang sisa).\n3. 💰 **Mulai dari Nominal Kecil**: Jika nanti sudah ada surplus, kita akan mulai investasi pelan-pelan.\n\nTetap semangat, semua orang mulai dari langkah kecil!`;
 
       baseResult = { yearlyInvestment, allocations, projections, maxProjection, totalOriginalCapital, pureInterest, message };
     }
