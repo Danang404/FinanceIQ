@@ -1,61 +1,173 @@
-# FinancIQ: Multi-Agent LLM Integration Blueprint
+# FinanceIQ: Multi-Agent LLM Integration Blueprint
 
-Dokumen ini disusun khusus untuk tim *Backend/AI Engineer* yang akan melanjutkan integrasi *website* FinancIQ ke dalam ekosistem LLM (OpenAI, Anthropic Gemini, atau sistem lokal lainnya).
+Dokumen ini disusun untuk tim *Backend/AI Engineer* yang ingin memahami arsitektur integrasi LLM dan melanjutkan pengembangannya. **Penting:** sejak dokumen ini pertama dibuat, arsitektur telah berkembang signifikan — frontend sudah memiliki LLM integration aktif.
 
-Arsitektur aplikasi (*Frontend*) sudah di-refactor menggunakan pola **Clean Architecture** melalui *Service Layer*. Dengan kata lain, logika UI telah sepenuhnya terpisah dari logika bisnis AI. Anda tidak perlu menyentuh atau membongkar kode React/UI sama sekali untuk memasukkan koneksi LLM Anda!
+---
+
+## Status Integrasi LLM Saat Ini
+
+| Lapisan | Status | Detail |
+|---|---|---|
+| Frontend Agents (3 agen) | ✅ **LLM Aktif** | `LLMService.ts` → 9Router → claude/deepseek |
+| Frontend Chatbot | ✅ **LLM Aktif** | `ChatService.ts` → LLMService → respons live |
+| Frontend Fallback | ✅ **Aktif** | Rule-based otomatis jika LLM gagal |
+| Backend Agents (7 agen) | ⚠️ **Perlu API Key** | LangGraph siap, butuh 9Router/provider aktif |
+| Frontend ↔ Backend Wiring | ❌ **Belum** | FE masih pakai agen lokal, bukan `/api/chat` |
+
+---
 
 ## 1. Topologi Arsitektur (Agent Workflow)
 
-Sistem telah dikondisikan agar mengeksekusi tiga (3) agen secara berurutan dalam format *Chain-of-Thought*. 
+### Frontend Pipeline (Aktif)
 
 ```mermaid
 graph TD
-    UI[Frontend UI] -->|RawFinancialData| O[Orchestrator.ts]
-    O -->|RawFinancialData| A1[Risk Profiler Agent]
+    UI[Frontend UI — Form 3 Seksi] -->|RawFinancialData| FC[FinanceContext.tsx]
+    FC --> O[Orchestrator.ts v3.0]
+    
+    O -->|Phase 1 Tools| T1[FinancialCalculator]
+    O -->|Phase 1 Tools| T2[RiskScorer]
+    O -->|Phase 1 Tools| T3[EmergencyFundAnalyzer]
+    
+    T1 & T2 & T3 --> A1[RiskProfilerAgent]
+    A1 -->|via LLMService| LLM[9Router Gateway]
+    LLM -->|kr/claude-sonnet-4.5| A1
     A1 -->|RiskProfileResult JSON| O
-    O -->|RiskProfileResult JSON| A2[Wealth Manager Agent]
-    O -->|RiskProfileResult JSON| A3[Market Analyst Agent]
+    
+    O -->|Parallel| A2[WealthManagerAgent]
+    O -->|Parallel| A3[MarketAnalystAgent]
+    A2 -->|via LLMService| LLM
+    A3 -->|via LLMService| LLM
+    
     A2 -->|WealthAllocationResult JSON| O
     A3 -->|StressTestResult JSON| O
-    O -->|OrchestratorResult| UI
+    
+    O --> MEM[AgentMemoryStore localStorage]
+    O --> CS[ChatService — PortfolioSnapshot injection]
+    O -->|OrchestratorResult| FC
+    FC --> UI
 ```
 
-### Penjelasan Flow:
-1. User menekan tombol "Inisiasi Pipeline" di halaman Beranda.
-2. `Orchestrator.ts` dipanggil dan melempar *raw input* ke **Risk Profiler Agent**.
-3. *Risk Profiler* menghitung rasio dasar dan memperbaiki bias pengguna (misal dari Agresif diubah menjadi Konservatif karena tidak punya kas darurat).
-4. Hasil JSON *Risk Profiler* (konteks baru) dilempar ke **Wealth Manager Agent** (untuk alokasi dan *compounding*) dan **Market Analyst Agent** (untuk *stress testing* market crash).
-5. Semua hasil (Result) dikemas dalam satu objek besar dan dikembalikan ke UI untuk di-*render*.
+### Backend Pipeline (Siap, Perlu Aktivasi)
+
+```mermaid
+graph TD
+    API[POST /api/chat] --> LG[LangGraph StateGraph]
+    LG --> FL[financial_literacy_node]
+    FL --> WM[wealth_manager_node]
+    FL --> RP[risk_profiler_node]
+    WM --> CV[cross_validation_node]
+    RP --> CV
+    CV --> MI[market_intelligence_node]
+    MI --> IS[investment_strategist_node]
+    IS --> CE[communication_education_node]
+    CE --> END[Return SessionState JSON]
+```
 
 ---
 
-## 2. Di Mana Anda Harus Menulis Kode (Integrasi API)?
+## 2. Penjelasan Flow Frontend (Detail)
 
-Semua persiapan LLM (Mock Logic) telah dipusatkan pada satu *folder* saja, yaitu:
-`frontend/src/services/agents/`
-
-Tugas Anda hanya perlu membuka ketiga *file* agen berikut dan mengubah isi *mock logic*-nya menjadi fungsi `fetch` ke API LLM pilihan Anda.
-
-### A. `RiskProfilerAgent.ts`
-- **Goal:** Membaca profil mentah dan memperbaiki persepsi risiko (Misal LLM memarahi *user* yang ingin main kripto tapi gajinya habis untuk bayar cicilan).
-- **Prompting Plan:** Berikan *System Prompt*: *"You are an Actuary & Risk Profiler. Read this user's data..."*.
-- **Expected Output:** Minta LLM mem-parsing jawaban ke dalam struktur JSON yang sudah didefinisikan pada tipe `RiskProfileResult` (lihat `types.ts`). 
-
-### B. `WealthManagerAgent.ts`
-- **Goal:** Membagikan sisa uang (*surplus*) ke berbagai instrumen (RDPU, SBN, Index, Kripto) berdasarkan *output* dari Agent 1.
-- **Prompting Plan:** Lempar hasil JSON dari Agent 1 ke dalam *prompt* Agent 2. 
-- **Expected Output:** Minta LLM mengembalikan JSON alokasi persentase (*allocations*) yang sesuai tipe `WealthAllocationResult`.
-
-### C. `MarketAnalystAgent.ts`
-- **Goal:** Menjalankan skenario *Stress Test* (Resesi, Hiperinflasi, PHK).
-- **Prompting Plan:** Lempar hasil JSON dari Agent 1 ke dalam *prompt* Agent 3. Mintalah LLM berimajinasi mengenai probabilitas kehancuran jika krisis terjadi hari ini.
-- **Expected Output:** Minta LLM untuk mengisi parameter *string* (`marketCrashImpact`, `hyperinflationImpact`) dalam bentuk JSON sesuai tipe `StressTestResult`.
+1. User mengisi form 3 seksi di halaman Beranda.
+2. `FinanceContext.tsx` memanggil `runAgentPipeline()` yang menginisiasi `Orchestrator.ts`.
+3. **PHASE 0 — PLANNING:** `buildAgentPlan()` mencatat 6 langkah eksekusi.
+4. **PHASE 1 — TOOLS:** 3 alat deterministik menghasilkan angka pra-kalkulasi sebelum LLM.
+5. **PHASE 2 — AGENT 1 (Risk Profiler):**
+   - `callAgentLLM()` dikirim ke 9Router dengan system prompt + data keuangan user.
+   - LLM menghasilkan JSON `RiskProfileResult`.
+   - Jika LLM gagal, fallback rule-based berjalan otomatis.
+6. **PHASE 3 — AGENT 2 & 3 (Parallel):**
+   - `WealthManagerAgent` + `MarketAnalystAgent` berjalan bersamaan via `Promise.all()`.
+   - Masing-masing memanggil LLM dengan konteks dari Agent 1.
+   - WealthManager juga merekomendasikan instrumen spesifik (nama RDPU, seri SBN, dll.).
+7. **PHASE 4 — MEMORY:**
+   - `AgentMemoryStore.saveAnalysis()` — simpan semua hasil ke localStorage.
+   - `ChatService.setPortfolioSnapshot()` — inject data langsung ke chatbot agar siap menjawab tanpa tanya ulang.
 
 ---
 
-## 3. Struktur Tipe (Schema) Wajib
-Harap pastikan LLM di-set menggunakan mode `response_format: { type: "json_object" }` (jika menggunakan OpenAI) dan patuhi *Schema* yang telah kami buat di `types.ts`. 
+## 3. Di Mana Anda Harus Menulis Kode
 
-Jika LLM gagal mengembalikan *field* persis seperti tipe (contoh `dtiRatio` ter-return sebagai *string* padahal *number*), UI (Next.js) akan mengalami *error render*. Selalu *casting* dan berikan *fallback* (contoh: `Number(json.dtiRatio) || 0`) setelah menerima respon LLM sebelum di-*return* dari fungsi `Agent.ts`.
+Semua logika LLM terpusat di folder:
+```
+frontend/src/services/agents/
+```
 
-Selamat bereksperimen! Arsitektur ini dirancang sefleksibel mungkin untuk evolusi *multi-agent* tingkat lanjut.
+### A. `LLMService.ts` — Gateway Utama
+**Konfigurasi API key dan URL** ada di 2 baris pertama file ini.
+Fungsi utama: `callAgentLLM(systemPrompt, userPrompt, numModelsToTry, parseJson)`.
+
+**Untuk mengganti provider:** cukup ubah `API_URL`, `API_KEY`, dan array `MODELS`.
+
+### B. `RiskProfilerAgent.ts`
+- **Goal:** Analisis profil risiko + koreksi bias persepsi (jika user pilih Agresif tapi kondisi keuangan tidak mendukung).
+- **LLM Prompt:** System prompt profiler + data keuangan mentah.
+- **Expected Output:** JSON `RiskProfileResult` dengan `surplus`, `dtiRatio`, `correctedRisk`, `explanation`.
+- **Fallback:** Kalkulasi rule-based deterministik.
+
+### C. `WealthManagerAgent.ts`
+- **Goal:** Alokasi portofolio + rekomendasi instrumen spesifik + proyeksi compounding 10 tahun.
+- **LLM Prompt:** Konteks Agent 1 + data pasar dari `MarketDataService`.
+- **Expected Output:** JSON `WealthAllocationResult` dengan `allocations`, `projections`, `recommendedInstruments`, `message`.
+- **Fallback:** Alokasi deterministik berdasarkan `correctedRisk`.
+
+### D. `MarketAnalystAgent.ts`
+- **Goal:** Stress test 3 skenario krisis: market crash -50%, hiperinflasi 15%, kehilangan pekerjaan.
+- **LLM Prompt:** Konteks Agent 1 + skenario krisis.
+- **Expected Output:** JSON `StressTestResult` dengan narasi `marketCrashImpact`, `hyperinflationImpact`, `jobLossImpact`.
+- **Fallback:** Kalkulasi survival months + narasi statis.
+
+### E. `ChatService.ts` — Literacy Agent
+- **Goal:** Menjawab pertanyaan user dengan konteks penuh hasil analisis.
+- **System Prompt:** Dibangun dari `PortfolioSnapshot` — mencakup data input + hasil ketiga agen.
+- **Limit:** 5 pesan gratis per sesi (`sessionStorage`).
+
+---
+
+## 4. Struktur Tipe (Schema) Wajib
+
+Semua agen harus menghasilkan output sesuai interface di `types.ts`.
+
+**Untuk agen frontend (LLM), pastikan selalu lakukan type-safe parsing:**
+```typescript
+// Contoh safe parsing setelah terima respons LLM:
+const parsed = await callAgentLLM(systemPrompt, userPrompt);
+
+const result: RiskProfileResult = {
+  surplus: Number(parsed?.surplus) || 0,
+  dtiRatio: Number(parsed?.dtiRatio) || 0,
+  correctedRisk: parsed?.correctedRisk || 'MODERAT',
+  // ... selalu berikan fallback value
+};
+```
+
+**Rekomendasi untuk meningkatkan reliabilitas:**
+- Gunakan `response_format: { type: "json_object" }` di API call (sudah didukung OpenAI, Groq, OpenRouter).
+- Atau gunakan Function Calling / Structured Outputs (`json_schema`) untuk jaminan 100%.
+- Selalu `Number(json.field) || 0` untuk field numerik.
+- Selalu berikan fallback string untuk field teks.
+
+---
+
+## 5. Roadmap Pengembangan Lanjut
+
+### Tingkat Lanjut 1 — Perkuat Reliabilitas (Jangka Pendek)
+- Implementasi `response_format: { type: "json_schema" }` di `LLMService.ts`
+- Tambah UI toast "Menggunakan estimasi — AI sedang sibuk" saat fallback aktif
+
+### Tingkat Lanjut 2 — Streaming & UX (Menengah)
+- Ubah `ChatService.sendMessage()` ke SSE streaming
+- Efek typewriter untuk respons chatbot
+
+### Tingkat Lanjut 3 — Persistensi & Auth (Penting)
+- Gantikan `AgentMemoryStore` localStorage → HTTP call ke backend/Firebase
+- Implementasikan JWT auth di backend + NextAuth.js di frontend
+
+### Tingkat Lanjut 4 — Integrasi Backend 7-Agen (Long-term)
+- Selaraskan `types.ts` (FE) dengan `state.py` (BE)
+- Ubah `FinanceContext.tsx` agar memanggil `POST /api/chat`
+- Backend 7-agen (LangGraph) menjadi sumber utama analisis
+
+---
+
+Selamat bereksperimen! Arsitektur ini dirancang sefleksibel mungkin untuk evolusi *multi-agent* tingkat lanjut. Frontend sudah berjalan mandiri dengan LLM, dan backend siap di-connect kapanpun.

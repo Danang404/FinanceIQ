@@ -1,7 +1,7 @@
 # 📋 Analisis Lengkap Proyek FinanceIQ
 
 > **FinanceIQ** — Aplikasi penasihat keuangan personal berbasis Multi-Agent AI.
-> Dibangun sebagai purwarupa (prototype) akademis, bukan produk komersial.
+> Dibangun sebagai purwarupa (prototype) akademis dengan integrasi LLM aktif via 9Router.
 
 ---
 
@@ -19,21 +19,21 @@
 
 ## Tahap 1: Gambaran Umum
 
-**FinanceIQ** adalah sistem pendukung keputusan keuangan yang mendistribusikan analisis ke dalam jaringan **Agen AI** (Multi-Agent). Pengguna memasukkan data keuangan (gaji, pengeluaran, hutang, tabungan), lalu sistem menganalisis melalui beberapa agen secara berantai (Chain-of-Thought) dan menghasilkan:
+**FinanceIQ** adalah sistem pendukung keputusan keuangan yang mendistribusikan analisis ke dalam jaringan **Agen AI** (Multi-Agent). Pengguna memasukkan data keuangan (gaji, pengeluaran, hutang, tabungan, profil demografis), lalu sistem menganalisis melalui beberapa agen secara berantai (Chain-of-Thought) dan menghasilkan:
 
-- Profil risiko objektif (bukan berdasarkan perasaan user)
-- Alokasi portofolio investasi yang disesuaikan profil
-- Simulasi stress test (skenario krisis ekonomi)
+- Profil risiko objektif (AI bisa mengoreksi pilihan user jika tidak sesuai kondisi keuangan)
+- Alokasi portofolio investasi yang disesuaikan profil + rekomendasi instrumen spesifik
+- Simulasi stress test (skenario: market crash -50%, hiperinflasi 15%, kehilangan pekerjaan)
 - Proyeksi pertumbuhan kekayaan 10 tahun (compounding)
-- Chatbot edukatif yang memahami konteks hasil analisis
+- Chatbot edukatif "Literacy Agent" yang sudah memiliki konteks penuh hasil analisis
 
 **Tech Stack:**
 
 | Layer | Teknologi |
 |-------|-----------|
-| Frontend | Next.js 16, React 19, TailwindCSS 4, Framer Motion |
-| Backend | Python, FastAPI, LangGraph, Pydantic |
-| LLM Gateway | 9Router (OpenAI-compatible proxy) |
+| Frontend | Next.js 16, React 19, TypeScript, TailwindCSS 4, Framer Motion, Recharts |
+| Backend | Python, FastAPI, LangGraph, Pydantic, yfinance |
+| LLM Gateway | 9Router (OpenAI-compatible proxy) — model kr/claude-sonnet-4.5, kr/claude-haiku-4.5, kr/deepseek-3.2 |
 | Design | Dark Mode, Glassmorphism, Material Symbols |
 
 ---
@@ -41,7 +41,7 @@
 ## Tahap 2: Struktur Folder
 
 ```
-financiiq/
+FinanceIQ/
 ├── frontend/                        # Aplikasi Next.js
 │   ├── src/
 │   │   ├── app/
@@ -51,40 +51,50 @@ financiiq/
 │   │   │   ├── beranda/page.tsx     # Dashboard utama + form input + hasil analisis + chatbot
 │   │   │   ├── analisa/page.tsx     # Deep dive: stress test 3 skenario krisis
 │   │   │   ├── rencana/page.tsx     # Deep dive: alokasi instrumen + grafik proyeksi
-│   │   │   ├── riwayat/page.tsx     # Log riwayat sesi (placeholder)
+│   │   │   ├── riwayat/page.tsx     # Log riwayat sesi (menggunakan AgentMemoryStore)
+│   │   │   ├── login/page.tsx       # Halaman login (AuthContext)
 │   │   │   ├── context/
-│   │   │   │   └── FinanceContext.tsx  # React Context: state global + pipeline trigger
+│   │   │   │   ├── FinanceContext.tsx  # React Context: state global + pipeline trigger
+│   │   │   │   └── AuthContext.tsx     # Auth Context: user session management
 │   │   │   └── components/
 │   │   │       ├── AppWrapper.tsx    # Conditional layout (landing vs dashboard)
 │   │   │       ├── Header.tsx        # Top navigation bar
 │   │   │       └── Sidebar.tsx       # Side + bottom mobile navigation
-│   │   └── services/agents/         # Frontend Mock Agents (sisi klien)
-│   │       ├── types.ts             # Interface TypeScript untuk semua output agen
-│   │       ├── Orchestrator.ts      # Pipeline runner: Agent1 → Agent2 → Agent3
-│   │       ├── RiskProfilerAgent.ts # Agent 1: Kalkulasi DTI, savings rate, koreksi risiko
-│   │       ├── WealthManagerAgent.ts# Agent 2: Alokasi portofolio + proyeksi compounding
-│   │       └── MarketAnalystAgent.ts# Agent 3: Stress test (crash, inflasi, PHK)
+│   │   └── services/agents/         # Frontend Agents + Services (sisi klien)
+│   │       ├── types.ts             # Interface TypeScript semua output agen & market data
+│   │       ├── LLMService.ts        # Klien 9Router: callAgentLLM() + model rotation + SSE fallback
+│   │       ├── Orchestrator.ts      # Pipeline v3.0: Tools → Agent1 → Agent2+3 (parallel) → Memory
+│   │       ├── RiskProfilerAgent.ts # Agent 1: LLM profil risiko + fallback rule-based
+│   │       ├── WealthManagerAgent.ts# Agent 2: LLM alokasi + instrumen spesifik + compounding
+│   │       ├── MarketAnalystAgent.ts# Agent 3: LLM stress test (crash, inflasi, PHK)
+│   │       ├── ChatService.ts       # Literacy Agent: chatbot LLM + portfolio snapshot injection
+│   │       ├── AgentMemoryStore.ts  # Memori persisten: localStorage + buildContextForChatbot()
+│   │       ├── AgentCapabilities.ts # Goal/Plan/ReasoningTrace builder untuk semua agen
+│   │       ├── AgentTools.ts        # Alat deterministik: FinancialCalculator, RiskScorer, dll.
+│   │       └── MarketDataService.ts # Klien backend: fetch instrumen, harga, IHSG, BTC, gold
 │   └── package.json
 │
 ├── backend/                         # Server FastAPI + LangGraph
-│   ├── main.py                      # Entry point: FastAPI app, endpoint /api/chat
-│   ├── requirements.txt             # Dependencies Python
-│   ├── .env                         # API keys (NINEROUTER_URL, NINEROUTER_KEY)
-│   ├── app/
-│   │   ├── core/
-│   │   │   └── llm.py              # Fungsi call_llm() via 9Router gateway
-│   │   ├── orchestrator/
-│   │   │   ├── state.py            # Pydantic models: SessionState + semua result types
-│   │   │   └── graph.py            # LangGraph StateGraph: 7 node, fan-out/fan-in
-│   │   └── agents/                 # 7 Agen Python (masing-masing punya prompt LLM)
-│   │       ├── financial_literacy.py    # Deteksi level literasi user
-│   │       ├── wealth_manager.py        # Evaluasi dana darurat + rekomendasi tabungan
-│   │       ├── risk_profiler.py         # Profil risiko via LLM
-│   │       ├── cross_validation.py      # Mediasi konflik antar agen
-│   │       ├── market_intelligence.py   # Konteks pasar (BI rate, IHSG)
-│   │       ├── investment_strategist.py # Susun portofolio + alokasi instrumen
-│   │       └── communication_education.py # Rangkuman akhir + roadmap belajar
-│   └── test_mock.py
+│   ├── main.py                      # FastAPI app: CORS, /api/chat, /api/market/*
+│   ├── requirements.txt             # fastapi, uvicorn, pydantic, langgraph, httpx, yfinance
+│   ├── .env                         # NINEROUTER_URL, NINEROUTER_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY
+│   ├── test_mock.py                 # Test lokal backend
+│   └── app/
+│       ├── core/
+│       │   └── llm.py              # call_llm() via 9Router (OpenAI-compatible), timeout 30s
+│       ├── orchestrator/
+│       │   ├── state.py            # Pydantic models: SessionState + semua result types
+│       │   └── graph.py            # LangGraph StateGraph: 7 node, fan-out/fan-in
+│       ├── agents/                 # 7 Agen Python (masing-masing punya prompt LLM)
+│       │   ├── financial_literacy.py    # Deteksi level literasi user
+│       │   ├── wealth_manager.py        # Evaluasi dana darurat + rekomendasi tabungan
+│       │   ├── risk_profiler.py         # Profil risiko via LLM
+│       │   ├── cross_validation.py      # Mediasi konflik antar agen
+│       │   ├── market_intelligence.py   # Konteks pasar (BI rate, IHSG)
+│       │   ├── investment_strategist.py # Susun portofolio + alokasi instrumen
+│       │   └── communication_education.py # Rangkuman akhir + roadmap belajar
+│       └── services/
+│           └── market_data.py      # Data pasar: yfinance (saham IDX, BTC, emas, reksa dana)
 │
 └── files/                           # Dokumen pendukung (PRD, SRS, SAD, desain UI)
 ```
@@ -93,39 +103,52 @@ financiiq/
 
 ## Tahap 3: Arsitektur & Cara Kerja
 
-### A. Frontend Pipeline (Saat Ini Aktif — Mock)
+### A. Frontend Pipeline (AKTIF — LLM + Fallback)
 
 ```
-[User Input Form]
+[User Input Form — 3 Seksi: Keuangan, Demografis, Tujuan & Risiko]
        │
        ▼
 [FinanceContext.tsx] ─── runAgentPipeline()
        │
        ▼
-[Orchestrator.ts] ─── Menjalankan 3 agen secara berurutan:
+[Orchestrator.ts v3.0] ─── Full Agentic Pipeline:
        │
-       ├── 1. RiskProfilerAgent.analyzeRisk(rawData)
-       │      Input:  Gaji, Pengeluaran, Hutang, Tabungan, Risiko pilihan user
+       ├── PHASE 0: PLANNING — Bangun AgentPlan (6 steps)
+       │
+       ├── PHASE 1: TOOLS — Kalkulasi deterministik
+       │   ├── toolFinancialCalculator() → surplus, dtiRatio, savingsRate
+       │   ├── toolRiskScorer()          → riskScore, correctedRisk
+       │   └── toolEmergencyFundAnalyzer() → status, progress, monthsNeeded
+       │
+       ├── PHASE 2: AGENT 1 — RiskProfilerAgent (LLM via 9Router)
+       │      Input:  RawFinancialData
+       │      LLM:    Prompt profiler + data keuangan → JSON parsing
        │      Output: surplus, dtiRatio, savingsRate, emergencyProgress,
-       │              correctedRisk (AI bisa override pilihan user), explanation
+       │              correctedRisk, isHealthy, explanation
+       │      Fallback: Rule-based jika LLM gagal
        │
-       ├── 2. WealthManagerAgent.generatePlan(riskProfileResult)
-       │      Input:  Output dari Agent 1 (surplus, correctedRisk)
-       │      Output: allocations {rdpu, sbn, indexFund, crypto},
-       │              projections[] (10 tahun), pureInterest, message
+       ├── PHASE 3: AGENT 2 & 3 — Parallel (Promise.all)
+       │   ├── WealthManagerAgent (LLM)
+       │   │      Input:  RiskProfileResult + MarketData
+       │   │      Output: allocations {rdpu, sbn, indexFund, crypto},
+       │   │              projections[] (10 tahun), recommendedInstruments,
+       │   │              message, pureInterest, totalOriginalCapital
+       │   └── MarketAnalystAgent (LLM)
+       │          Input:  RiskProfileResult
+       │          Output: survivalMonths, isSurvivalDanger, floatingDebtImpact,
+       │                  marketCrashImpact, hyperinflationImpact, jobLossImpact, conclusion
        │
-       └── 3. MarketAnalystAgent.runStressTest(riskProfileResult)
-              Input:  Output dari Agent 1
-              Output: survivalMonths, marketCrashImpact, hyperinflationImpact,
-                      jobLossImpact, conclusion
+       └── PHASE 4: MEMORY — Simpan ke AgentMemoryStore (localStorage)
+              ReasoningTraces + AgentPlan + LastAnalysis tersimpan
+              ChatService di-inject PortfolioSnapshot untuk chatbot
        │
        ▼
-[React Context menyimpan hasil → UI auto-render]
+[React Context menyimpan hasil → UI auto-render semua halaman]
+[ChatService.setPortfolioSnapshot() → Chatbot siap dengan konteks penuh]
 ```
 
-**Penting:** Ketiga agen ini saat ini menggunakan logika `if/else` murni (MOCK). Belum ada pemanggilan LLM.
-
-### B. Backend Pipeline (Sudah Terstruktur — Belum Digunakan Frontend)
+### B. Backend Pipeline (Siap — Perlu API Key Valid)
 
 ```
 [POST /api/chat]
@@ -150,13 +173,19 @@ financiiq/
        │              (Susun portofolio instrumen + analogi)
        │
        └── → communication_education_node → END
-                      (Narasi akhir + roadmap belajar + disclaimer)
+                       (Narasi akhir + roadmap belajar + disclaimer)
        │
        ▼
 [Return SessionState lengkap sebagai JSON]
 ```
 
-**Setiap node** memanggil `call_llm()` di `app/core/llm.py` yang mengirim request ke 9Router (OpenAI-compatible gateway). Jika gateway gagal, ada fallback string statis.
+**Market Data Endpoints (Backend):**
+- `GET /api/market/instruments` — Katalog lengkap (saham IDX, RDPU, SBN, crypto, emas)
+- `GET /api/market/summary` — Ringkasan pasar (IHSG, BTC, Gold, BI Rate)
+- `GET /api/market/stocks` — Daftar saham IDX dengan harga live
+- `GET /api/market/indices` — IHSG dan LQ45
+- `GET /api/market/stock/{ticker}` — Detail harga per ticker
+- `GET /api/market/history/{ticker}` — Historis harga untuk charting
 
 ---
 
@@ -167,38 +196,47 @@ financiiq/
 | Halaman | Route | Fungsi |
 |---------|-------|--------|
 | Landing Page | `/` | Marketing page dengan animasi, FAQ, tech stack marquee |
-| Beranda | `/beranda` | **Halaman utama**: Form input → Loading animation → Hasil 3 agen + Chatbot |
+| Login | `/login` | Halaman autentikasi (AuthContext) |
+| Beranda | `/beranda` | **Halaman utama**: Form 3 seksi → Loading animation → Hasil 3 agen + Chatbot Literacy Agent |
 | Analisa | `/analisa` | Deep dive Risk Profiler: rasio DTI, savings rate, 3 skenario stress test |
 | Rencana | `/rencana` | Deep dive Wealth Manager: breakdown instrumen + grafik bar proyeksi 10 tahun |
-| Riwayat | `/riwayat` | Placeholder log sesi (belum ada persistensi data) |
+| Riwayat | `/riwayat` | Log riwayat sesi (membaca dari AgentMemoryStore localStorage) |
 
-### Frontend Services (Mock Agents)
+### Frontend Services (LLM-Powered + Fallback)
 
-| File | Kelas | Fungsi Utama | Logika |
-|------|-------|-------------|--------|
-| `RiskProfilerAgent.ts` | `RiskProfilerAgent` | `analyzeRisk()` | Hitung surplus, DTI, savings rate. Override risiko jika tidak sehat. |
-| `WealthManagerAgent.ts` | `WealthManagerAgent` | `generatePlan()` | Alokasi % per instrumen berdasarkan correctedRisk. Proyeksi compounding 7%/tahun. |
-| `MarketAnalystAgent.ts` | `MarketAnalystAgent` | `runStressTest()` | Simulasi dampak market crash, hiperinflasi, PHK berdasarkan emergency progress. |
+| File | Kelas/Fungsi | Status | Fungsi Utama |
+|------|-------------|--------|--------------|
+| `LLMService.ts` | `callAgentLLM()` | ✅ Aktif | HTTP POST ke 9Router, model rotation, SSE fallback parsing |
+| `RiskProfilerAgent.ts` | `RiskProfilerAgent` | ✅ LLM + Fallback | Profil risiko via LLM, fallback rule-based jika LLM gagal |
+| `WealthManagerAgent.ts` | `WealthManagerAgent` | ✅ LLM + Fallback | Alokasi + instrumen spesifik via LLM, fallback deterministik |
+| `MarketAnalystAgent.ts` | `MarketAnalystAgent` | ✅ LLM + Fallback | Stress test via LLM, fallback kalkulasi lokal |
+| `ChatService.ts` | `ChatService` | ✅ LLM Live | Chatbot dengan sistem prompt penuh + portfolio snapshot |
+| `AgentMemoryStore.ts` | `AgentMemoryStore` | ✅ Aktif | localStorage, buildContextForChatbot(), max 50 episodic entries |
+| `AgentCapabilities.ts` | — | ✅ Aktif | AGENT_GOALS, buildAgentPlan(), createReasoningTrace() |
+| `AgentTools.ts` | — | ✅ Aktif | 4 alat deterministik (Calculator, RiskScorer, EmergencyFund, Allocator) |
+| `MarketDataService.ts` | — | ✅ Aktif | Fetch dari backend + FALLBACK_INSTRUMENTS statis jika backend offline |
+| `Orchestrator.ts` | `Orchestrator` | ✅ Full Agentic | Pipeline v3.0: Planning → Tools → Agent1 → Agent2+3 parallel → Memory |
 
-### Backend Agents (LLM-Powered)
+### Backend Agents (LLM-Powered via 9Router)
 
-| File | Fungsi | Model LLM Target | Tugas |
-|------|--------|------------------|-------|
-| `financial_literacy.py` | `run_financial_literacy()` | `gemini-1.5-flash` | Klasifikasi literasi user → tentukan gaya bahasa |
-| `wealth_manager.py` | `run_wealth_manager()` | `gpt-4o-mini` | Evaluasi dana darurat + rekomendasi tabungan naratif |
-| `risk_profiler.py` | `run_risk_profiler()` | `claude-3-haiku` | Profil risiko: Konservatif/Moderat/Agresif + reasoning |
-| `cross_validation.py` | `run_cross_validation()` | `mimo-code-free` | Mediasi: hitung investable amount + penjelasan empatik |
-| `market_intelligence.py` | `run_market_intelligence()` | `opencode-free` | Terjemahkan data pasar (BI rate, IHSG) ke bahasa user |
-| `investment_strategist.py` | `run_investment_strategist()` | `gemini-1.5-pro` | Susun portofolio + analogi per instrumen |
-| `communication_education.py` | `run_communication_education()` | `gpt-4o` | Narasi akhir + roadmap belajar 3 fase + disclaimer |
+| File | Fungsi | Model Target | Tugas |
+|------|--------|--------------|-------|
+| `financial_literacy.py` | `run_financial_literacy()` | `gemini-1.5-flash` | Klasifikasi literasi user |
+| `wealth_manager.py` | `run_wealth_manager()` | `gpt-4o-mini` | Evaluasi dana darurat |
+| `risk_profiler.py` | `run_risk_profiler()` | `claude-3-haiku` | Profil risiko: Konservatif/Moderat/Agresif |
+| `cross_validation.py` | `run_cross_validation()` | `mimo-code-free` | Mediasi & hitung investable amount |
+| `market_intelligence.py` | `run_market_intelligence()` | `opencode-free` | Konteks pasar (BI rate, IHSG) |
+| `investment_strategist.py` | `run_investment_strategist()` | `gemini-1.5-pro` | Portofolio + alokasi instrumen |
+| `communication_education.py` | `run_communication_education()` | `gpt-4o` | Narasi akhir + roadmap belajar |
 
 ### Backend Core
 
 | File | Fungsi |
 |------|--------|
-| `main.py` | FastAPI app, endpoint `GET /api/health` dan `POST /api/chat` |
-| `app/core/llm.py` | `call_llm()` — HTTP POST ke 9Router (`/v1/chat/completions`), timeout 30s, fallback string |
-| `app/orchestrator/state.py` | Semua Pydantic model: `SessionState`, `RiskProfileResult`, `WealthStatusResult`, `AllocationResult`, dsb |
+| `main.py` | FastAPI v3.0 — CORS, `GET /api/health`, `POST /api/chat`, 6x `GET /api/market/*` |
+| `app/core/llm.py` | `call_llm()` — HTTP POST ke 9Router, timeout 30s, fallback string |
+| `app/services/market_data.py` | Fetch data saham IDX via yfinance, fallback statis |
+| `app/orchestrator/state.py` | Pydantic models: `SessionState`, `RiskProfileResult`, `WealthStatusResult`, dll. |
 | `app/orchestrator/graph.py` | LangGraph `StateGraph` — 7 node, fan-out/fan-in, `run_agent_graph()` |
 
 ---
@@ -207,34 +245,32 @@ financiiq/
 
 ### Prasyarat
 - **Node.js** ≥ 18
-- **Python** ≥ 3.10 (disarankan 3.11 atau 3.12, **hindari 3.13** karena pydantic sering error)
+- **Python** ≥ 3.10 (**gunakan 3.11 atau 3.12**, hindari 3.13)
 - **Git**
+- **9Router** atau provider LLM lain (OpenAI, Groq, OpenRouter)
 
 ### A. Menjalankan Frontend (Bisa Mandiri Tanpa Backend)
 
 ```powershell
-cd financiiq/frontend
+cd FinanceIQ/frontend
 npm install
 npm run dev
 ```
 
 Buka: **http://localhost:3000**
 
-> Frontend berjalan 100% mandiri menggunakan Mock Agents di sisi klien. Tidak butuh backend.
+> Frontend berjalan mandiri. Agen memanggil LLM via 9Router (`localhost:20128`). Jika LLM tidak tersedia, fallback rule-based aktif otomatis. Market data di-fetch dari backend; jika backend offline, menggunakan data statis bawaan.
 
 ### B. Menjalankan Backend
 
 ```powershell
-cd financiiq/backend
+cd FinanceIQ/backend
 
 # Buat virtual environment
 python -m venv venv
 
 # Aktifkan (Windows PowerShell)
 .\venv\Scripts\activate
-
-# Aktifkan (Linux/Mac)
-# source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -245,16 +281,36 @@ python main.py
 
 Backend: **http://localhost:8000**
 Health check: **http://localhost:8000/api/health**
+Market summary: **http://localhost:8000/api/market/summary**
 
-### C. Troubleshooting Umum
+### C. Konfigurasi LLM
+
+Edit `backend/.env`:
+```env
+NINEROUTER_URL=http://localhost:20128
+NINEROUTER_KEY=your-9router-key
+
+# Atau langsung ke provider resmi:
+# NINEROUTER_URL=https://api.openai.com
+# NINEROUTER_KEY=sk-xxxx
+```
+
+Edit `frontend/src/services/agents/LLMService.ts`:
+```typescript
+const API_URL = "http://localhost:20128/v1/chat/completions"; // Ganti sesuai provider
+const API_KEY = "your-api-key";
+```
+
+### D. Troubleshooting Umum
 
 | Masalah | Solusi |
 |---------|--------|
 | `source` not recognized (Windows) | Gunakan `.\venv\Scripts\activate` |
 | `ModuleNotFoundError: pydantic_core._pydantic_core` | `pip uninstall pydantic pydantic-core -y && pip install --no-cache-dir pydantic pydantic-core` |
 | Python 3.13 + pydantic error | Downgrade ke Python 3.11 atau 3.12 |
-| Backend error saat call LLM | Pastikan `.env` berisi `NINEROUTER_URL` dan `NINEROUTER_KEY` yang valid |
-| Frontend ↔ Backend CORS error | Tambahkan CORS middleware di `main.py` (belum ada) |
+| LLM tidak merespons (Frontend) | Agen otomatis fallback ke rule-based — cek console browser |
+| Backend LLM error | Pastikan `.env` berisi `NINEROUTER_URL` dan `NINEROUTER_KEY` yang valid |
+| yfinance timeout | Backend pakai data statis jika fetch gagal — tidak memengaruhi frontend |
 
 ---
 
@@ -265,77 +321,80 @@ Health check: **http://localhost:8000/api/health**
 | Modul | Status | Keterangan |
 |-------|--------|------------|
 | UI/UX Landing Page | ✅ Selesai | Animasi, responsive, dark mode |
-| UI/UX Dashboard (Beranda) | ✅ Selesai | Form, loading state, hasil analisis, chatbot |
+| UI/UX Dashboard (Beranda) | ✅ Selesai | Form 3 seksi, loading state, hasil analisis, chatbot |
 | UI/UX Analisa | ✅ Selesai | Stress test 3 skenario |
-| UI/UX Rencana | ✅ Selesai | Alokasi + grafik proyeksi |
-| UI/UX Riwayat | ⚠️ Placeholder | Hanya 1 entry statis, tidak ada persistensi |
-| Frontend Mock Agents | ✅ Berjalan | Logika if/else, tanpa LLM |
-| Backend FastAPI Server | ✅ Berjalan | Endpoint siap, graph terkompilasi |
-| Backend LLM Integration | ❌ Belum Terhubung | Butuh API key valid + 9Router aktif |
-| **Frontend ↔ Backend Wiring** | ❌ **Terputus** | Frontend tidak `fetch` ke backend |
-| CORS Middleware | ❌ Belum Ada | Backend blokir cross-origin request |
-| Persistensi Data | ❌ Tidak Ada | State hilang saat refresh |
-| Autentikasi | ❌ Tidak Ada | Tidak ada login/register |
-| Chatbot Live | ❌ Mock | Balasan chatbot hardcoded |
+| UI/UX Rencana | ✅ Selesai | Alokasi instrumen + grafik proyeksi Recharts |
+| UI/UX Riwayat | ⚠️ Basic | Membaca localStorage, belum ada persistensi cloud |
+| UI/UX Login | ✅ Selesai | Halaman login dengan AuthContext |
+| Frontend LLMService | ✅ Aktif | 9Router + model rotation + SSE parsing fallback |
+| Frontend Mock Fallback | ✅ Aktif | Rule-based otomatis jika LLM gagal |
+| Frontend Agents (3 agen) | ✅ LLM + Fallback | RiskProfiler, WealthManager, MarketAnalyst |
+| ChatService (Literacy Agent) | ✅ LLM Live | Portfolio snapshot injection, 5 pesan gratis/sesi |
+| AgentMemoryStore | ✅ Aktif | localStorage, context chatbot, episodic history |
+| AgentTools (4 alat) | ✅ Aktif | Deterministik, dijalankan sebelum LLM |
+| MarketDataService | ✅ Aktif | Fetch backend + fallback data statis |
+| Backend FastAPI + CORS | ✅ Selesai | CORS dikonfigurasi, endpoint siap |
+| Backend Market Data (yfinance) | ✅ Selesai | 6 endpoint aktif |
+| Backend LLM (7 agen Python) | ⚠️ Perlu Key Valid | Struktur siap, butuh 9Router aktif atau API key resmi |
+| Backend LangGraph Graph | ✅ Terkompilasi | 7 node, fan-out/fan-in, siap dijalankan |
+| **Frontend ↔ Backend Wiring (Chat)** | ⚠️ **Belum Terhubung** | Frontend masih memanggil agen lokal, bukan `/api/chat` |
+| Persistensi Data Cloud | ❌ Tidak Ada | Hanya localStorage — hilang saat clear cache |
+| Autentikasi Penuh | ⚠️ Partial | AuthContext ada tapi belum ada backend auth |
+| JSON Parse Reliability | ⚠️ Risiko | LLM kadang return JSON malformed — ada fallback tapi diam |
 
-### Kekurangan Kritis
+### Kekurangan Aktual (Update Terbaru)
 
-1. **Frontend tidak memanggil Backend.**
-   `FinanceContext.tsx` menjalankan `Orchestrator.ts` (mock lokal), bukan `fetch("/api/chat")`.
+1. **Frontend tidak memanggil Backend untuk analisis utama.**
+   `FinanceContext.tsx` memanggil `Orchestrator.ts` (frontend agen lokal), bukan `POST /api/chat`. Backend 7-agen belum diintegrasikan ke alur utama.
 
-2. **CORS middleware tidak ada di `main.py`.**
-   Browser akan memblokir request cross-origin.
+2. **JSON Extraction reliability.**
+   `LLMService.ts` sudah memiliki pembersih markdown `json` blok, tapi model yang berbeda-beda kadang return format berbeda. Silent fail ke mock data bisa terjadi tanpa UI feedback.
 
-3. **Skema data Frontend ≠ Backend.**
-   - Frontend `RiskProfileResult`: `surplus`, `dtiRatio`, `correctedRisk`, `emergencyProgress`
-   - Backend `RiskProfileResult`: `kategori`, `skor`, `reasoning`, `catatan_untuk_agent_lain`
-   - **Tidak kompatibel. Harus diselaraskan.**
+3. **Persistensi Data.**
+   `AgentMemoryStore` menggunakan `localStorage`. Data hilang jika user ganti perangkat atau clear cache browser.
 
-4. **Chatbot hardcoded.**
-   `handleSendChat()` di `beranda/page.tsx` return string statis via `setTimeout`.
+4. **Autentikasi belum lengkap.**
+   `AuthContext.tsx` ada, halaman `/login` ada, tapi tidak ada backend auth (JWT, session). Semua user memiliki akses penuh tanpa login.
 
-5. **LLM Gateway belum dikonfigurasi.**
-   `call_llm()` mengarah ke `localhost:20128` (9Router). Tanpa ini, semua agen fallback.
+5. **ChatService limit 5 pesan hardcoded.**
+   Setelah 5 pesan, user ditolak. Tidak ada mekanisme reset atau premium tier yang berfungsi.
 
-6. **Alokasi portofolio di UI hardcoded 30/35/25/10%.**
-   Tidak menggunakan output dari `WealthManagerAgent`.
+6. **Halaman Riwayat terbatas.**
+   Hanya membaca `localStorage` — tidak ada sinkronisasi antar perangkat atau penyimpanan permanen.
 
 ---
 
 ## Tahap 7: Langkah Penyelesaian
 
-### Fase 1: Koneksi Frontend ↔ Backend (Prioritas Tertinggi)
+### Fase 1: Koneksi Frontend ↔ Backend (Opsional — Arsitektur Hybrid)
 
-1. **Tambah CORS di `main.py`:**
-   ```python
-   from fastapi.middleware.cors import CORSMiddleware
-   app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-   ```
+Backend 7-agen (Python/LangGraph) menggunakan schema berbeda dari frontend 3-agen (TypeScript). Pilih strategi:
 
-2. **Selaraskan skema data** — pilih satu source of truth antara `types.ts` (FE) dan `state.py` (BE).
+**Opsi A — Tetap Frontend-Only (Rekomendasi Sementara):**
+> Pertahankan arsitektur saat ini. Frontend sudah berjalan dengan LLM via 9Router. Fokus ke perbaikan lain lebih dulu.
 
-3. **Ubah `FinanceContext.tsx`** — ganti mock orchestrator menjadi:
-   ```typescript
-   const res = await fetch("http://localhost:8000/api/chat", {
-     method: "POST",
-     headers: { "Content-Type": "application/json" },
-     body: JSON.stringify({ user_input: "...", session_state: { data_dasar: {...} } })
-   });
-   const data = await res.json();
-   ```
+**Opsi B — Integrasikan Backend:**
+1. Selaraskan schema `types.ts` (FE) dengan `state.py` (BE)
+2. Ubah `FinanceContext.tsx` agar `fetch` ke `POST /api/chat`
+3. Pastikan 9Router aktif dan key valid di `backend/.env`
 
-### Fase 2: Aktifkan LLM
+### Fase 2: Perkuat Reliabilitas LLM
 
-4. **Konfigurasi `.env`** — isi API key yang valid, atau ubah `call_llm()` agar langsung panggil OpenAI/Anthropic.
+4. **Implementasi Structured Outputs (Function Calling)** — gunakan `response_format: { type: "json_schema" }` untuk jaminan 100% schema JSON tidak error.
+5. **UI feedback saat LLM fallback** — tampilkan toast/banner "Menggunakan mode estimasi (AI sedang sibuk)".
 
-5. **Test setiap agen** via Postman ke `POST /api/chat`.
+### Fase 3: Persistensi & Autentikasi
 
-### Fase 3: Penyempurnaan
+6. **Gantikan `localStorage`** dengan API calls ke backend (atau Firebase/Supabase).
+7. **Implementasikan auth backend** — JWT atau NextAuth.js untuk sesi yang persistent.
+8. **Halaman Riwayat** — fetch riwayat sesi dari database per user ID.
 
-6. **Hubungkan chatbot** ke endpoint backend (tambah `/api/chat/followup`).
-7. **Persistensi** — minimal `localStorage`, idealnya database.
-8. **Halaman Riwayat** — implementasi histori sesi.
+### Fase 4: Pengalaman Pengguna
+
+9. **Streaming response** untuk chatbot (SSE/WebSocket) — efek typewriter agar tidak terasa lag.
+10. **Validasi form lebih ketat** — cegah input dengan pendapatan = 0 atau pengeluaran > pendapatan ekstrem.
+11. **Real-time market data** — update yfinance secara terjadwal di backend, bukan hanya saat request.
 
 ---
 
-> **Kesimpulan:** Proyek memiliki fondasi arsitektur yang sangat baik (Clean Architecture, typed contracts, LangGraph orchestration). Kekurangan utama adalah **wiring** — menghubungkan bagian-bagian yang sudah jadi menjadi satu sistem end-to-end yang utuh.
+> **Kesimpulan:** Proyek memiliki fondasi arsitektur yang sangat matang — Clean Architecture, typed contracts, LangGraph orchestration, full agentic pipeline dengan memory & reasoning traces. LLM integration di frontend sudah berjalan aktif via 9Router dengan fallback otomatis. Prioritas berikutnya adalah reliabilitas JSON parsing, persistensi data cloud, dan autentikasi penuh.
